@@ -154,7 +154,7 @@ function createWindow() {
   Menu.setApplicationMenu(null);
   const win = new BrowserWindow({
     width: 960,
-    height: 680,
+    height: 920,
     title: 'Vibe Coding LED Manager - Ai3D趣造',
     icon: path.join(__dirname, 'icon.ico'),
     webPreferences: {

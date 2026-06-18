@@ -10,17 +10,18 @@
 <div id="app">
   <header>
     <h1>Vibe Coding LED Manager - Ai3D趣造</h1>
-    <button id="btn-shop" title="设备购买">设备购买</button>
+    <button id="btn-lang" title="Switch Language">EN</button>
+    <button id="btn-shop" data-i18n="shopBtn" data-i18n-title="shopBtnTitle" title="设备购买">设备购买</button>
   </header>
   <div id="shop-modal" class="modal-overlay">
     <div class="modal-content">
       <img id="shop-logo" src="" alt="Ai3D趣造" style="width:120px;height:120px;border-radius:12px;object-fit:cover;">
-      <h3>Ai3D趣造</h3>
+      <h3 data-i18n="shopTitle">Ai3D趣造</h3>
       <div class="shop-links">
-        <a class="btn" href="#" onclick="openExternal('https://shop106055843.taobao.com/category.htm?spm=pc_detail.30350276.shop_block.dshopinfo.3e907dd6X0ddB7')">淘宝</a>
-        <a class="btn" href="#" onclick="openExternal('https://mobile.yangkeduo.com/mall_page.html?ps=kSxgffPoX9')">拼多多</a>
+        <a class="btn" href="#" data-i18n="shopTaobao" onclick="openExternal('https://shop106055843.taobao.com/category.htm?spm=pc_detail.30350276.shop_block.dshopinfo.3e907dd6X0ddB7')">淘宝</a>
+        <a class="btn" href="#" data-i18n="shopPinduoduo" onclick="openExternal('https://mobile.yangkeduo.com/mall_page.html?ps=kSxgffPoX9')">拼多多</a>
       </div>
-      <button class="btn btn-close" onclick="document.getElementById('shop-modal').classList.remove('show')">关闭</button>
+      <button class="btn btn-close" data-i18n="closeBtn" onclick="document.getElementById('shop-modal').classList.remove('show')">关闭</button>
     </div>
   </div>
 
@@ -29,31 +30,31 @@
     <aside id="left-panel">
       <!-- Environment -->
       <section class="card">
-        <h2>运行环境</h2>
+        <h2 data-i18n="envTitle">运行环境</h2>
         <div id="env-status">
-          <div class="env-row"><span class="label">Python</span><span id="env-python" class="badge">检测中...</span></div>
+          <div class="env-row"><span class="label">Python</span><span id="env-python" class="badge" data-i18n="checking">检测中...</span></div>
         </div>
       </section>
 
       <!-- Dependencies -->
       <section class="card">
-        <h2>依赖库</h2>
+        <h2 data-i18n="depsTitle">依赖库</h2>
         <div id="dep-status">
-          <div class="env-row"><span class="label">bleak</span><span id="env-bleak" class="badge">检测中...</span></div>
-          <div class="env-row"><span class="label">mcp</span><span id="env-mcp" class="badge">检测中...</span></div>
+          <div class="env-row"><span class="label">bleak</span><span id="env-bleak" class="badge" data-i18n="checking">检测中...</span></div>
+          <div class="env-row"><span class="label">mcp</span><span id="env-mcp" class="badge" data-i18n="checking">检测中...</span></div>
         </div>
-        <button id="btn-install-deps" class="btn secondary" disabled>安装依赖</button>
+        <button id="btn-install-deps" class="btn secondary" data-i18n="installDepsBtn" disabled>安装依赖</button>
       </section>
 
       <!-- Device Binding -->
       <section class="card">
-        <h2>设备绑定</h2>
+        <h2 data-i18n="deviceBindingTitle">设备绑定</h2>
         <div id="device-info">
-          <span id="device-id" class="dim">未绑定</span>
+          <span id="device-id" class="dim" data-i18n="unbound">未绑定</span>
         </div>
         <div class="btn-row">
-          <button id="btn-scan" class="btn">扫描设备</button>
-          <button id="btn-unbind" class="btn danger" disabled>解除绑定</button>
+          <button id="btn-scan" class="btn" data-i18n="scanDeviceBtn">扫描设备</button>
+          <button id="btn-unbind" class="btn danger" data-i18n="unbindDeviceBtn" disabled>解除绑定</button>
         </div>
         <div id="scan-results"></div>
       </section>
@@ -63,37 +64,37 @@
     <section id="right-panel">
       <!-- Install Settings -->
       <div class="card">
-        <h2>安装设置</h2>
+        <h2 data-i18n="installSettingsTitle">安装设置</h2>
         <div class="settings-row">
           <div class="scope-selector">
-            <span class="label">安装范围:</span>
-            <label class="radio"><input type="radio" name="scope" value="global" checked> 全局</label>
-            <label class="radio"><input type="radio" name="scope" value="project"> 项目</label>
+            <span class="label" data-i18n="scopeLabel">安装范围:</span>
+            <label class="radio"><input type="radio" name="scope" value="global" checked> <span data-i18n="globalScope">全局</span></label>
+            <label class="radio"><input type="radio" name="scope" value="project"> <span data-i18n="projectScope">项目</span></label>
           </div>
           <div id="project-dir-group" class="dir-selector" style="display:none">
-            <span class="label">项目目录:</span>
-            <input id="project-dir" type="text" readonly placeholder="点击浏览选择项目目录...">
-            <button id="btn-browse" class="btn small">浏览</button>
+            <span class="label" data-i18n="projectDirLabel">项目目录:</span>
+            <input id="project-dir" type="text" readonly data-i18n-placeholder="browsePlaceholder" placeholder="点击浏览选择项目目录...">
+            <button id="btn-browse" class="btn small" data-i18n="browseBtn">浏览</button>
           </div>
         </div>
       </div>
 
       <!-- Platform List -->
       <div class="card">
-        <h2>平台列表 <span class="dim">—</span> <span class="dim" id="scope-label">全局</span></h2>
+        <h2><span data-i18n="platformListTitle">平台列表</span> <span class="dim">—</span> <span class="dim" id="scope-label" data-i18n="scopeGlobal">全局</span></h2>
         <table id="platform-table">
-          <thead><tr><th>平台</th><th>类型</th><th>状态</th><th>操作</th></tr></thead>
+          <thead><tr><th data-i18n="thPlatform">平台</th><th data-i18n="thType">类型</th><th data-i18n="thStatus">状态</th><th data-i18n="thActions">操作</th></tr></thead>
           <tbody id="platform-tbody"></tbody>
         </table>
       </div>
 
       <!-- Other Platforms -->
       <div class="card">
-        <h2>其他平台</h2>
-        <p class="hint">不支持自动安装的工具，导出配置文件后参考平台文档手动配置。</p>
+        <h2 data-i18n="otherPlatformsTitle">其他平台</h2>
+        <p class="hint" data-i18n="hintText">不支持自动安装的工具，导出配置文件后参考平台文档手动配置。</p>
         <div class="btn-row">
-          <button id="btn-export-mcp" class="btn">导出 mcp.json</button>
-          <button id="btn-export-skill" class="btn">导出 SKILL.md</button>
+          <button id="btn-export-mcp" class="btn" data-i18n="exportMcpBtn">导出 mcp.json</button>
+          <button id="btn-export-skill" class="btn" data-i18n="exportSkillBtn">导出 SKILL.md</button>
         </div>
         <div id="export-result" class="hint" style="margin-top:8px"></div>
       </div>
@@ -101,7 +102,7 @@
   </main>
 
   <footer>
-    <span id="status-bar">就绪</span>
+    <span id="status-bar" data-i18n="ready">就绪</span>
   </footer>
 </div>
 

@@ -5,6 +5,7 @@ const state = {
   projectDir: '',
   scope: 'global',
   busy: false,
+  env: null,
 };
 
 // Platform types for badge display
@@ -27,6 +28,198 @@ const TYPE_LABELS = {
   skill: 'Skill',
   mcp: 'MCP',
 };
+
+// ── I18N ───────────────────────────────────────────
+const I18N = {
+  zh: {
+    shopBtn: '设备购买',
+    shopBtnTitle: '设备购买',
+    shopTitle: 'Ai3D趣造',
+    shopTaobao: '淘宝',
+    shopPinduoduo: '拼多多',
+    closeBtn: '关闭',
+    envTitle: '运行环境',
+    depsTitle: '依赖库',
+    installDepsBtn: '安装依赖',
+    deviceBindingTitle: '设备绑定',
+    scanDeviceBtn: '扫描设备',
+    unbindDeviceBtn: '解除绑定',
+    installSettingsTitle: '安装设置',
+    scopeLabel: '安装范围:',
+    globalScope: '全局',
+    projectScope: '项目',
+    projectDirLabel: '项目目录:',
+    browsePlaceholder: '点击浏览选择项目目录...',
+    browseBtn: '浏览',
+    platformListTitle: '平台列表',
+    thPlatform: '平台',
+    thType: '类型',
+    thStatus: '状态',
+    thActions: '操作',
+    otherPlatformsTitle: '其他平台',
+    hintText: '不支持自动安装的工具，导出配置文件后参考平台文档手动配置。',
+    exportMcpBtn: '导出 mcp.json',
+    exportSkillBtn: '导出 SKILL.md',
+    ready: '就绪',
+    checking: '检测中...',
+    needInstall: '需安装',
+    notInstalled: '未安装',
+    installed: '已安装',
+    unbound: '未绑定',
+    bound: '已绑定',
+    bind: '绑定',
+    uninstall: '卸载',
+    install: '安装',
+    checkingEnvStatus: '检测环境中...',
+    envCheckFailed: '环境检测失败: ',
+    installDepsStatus: '安装依赖中... pip install bleak mcp',
+    depsInstalled: '依赖安装完成',
+    depsInstallFailed: '依赖安装失败: ',
+    loadingStatus: '加载平台状态...',
+    loadFailed: '加载失败: ',
+    selectProjectFirst: '请先选择项目目录',
+    confirmInstall: '确认安装 {0} ({1})？',
+    projectLevel: '项目级',
+    globalLevel: '全局',
+    installingStatus: '安装 {0} ({1}) 中...',
+    installComplete: '{0} 安装完成',
+    installError: '{0} 安装出错',
+    confirmUninstall: '确认卸载 {0}？',
+    uninstallingStatus: '卸载 {0} 中...',
+    uninstalled: '{0} 已卸载',
+    uninstallError: '{0} 卸载出错',
+    scanningStatus: '扫描设备中...',
+    scanningLabel: '扫描中...',
+    noDeviceFound: '未发现设备',
+    scanError: '扫描出错: ',
+    bindingStatus: '绑定 {0}...',
+    boundTo: '已绑定: {0}',
+    bindFailed: '绑定失败: ',
+    unboundSuccess: '绑定已解除',
+    exportedTo: '已导出: {0}',
+    mcpExported: 'mcp.json 已导出',
+    skillExported: 'SKILL.md 已导出',
+    exportFailed: '导出失败: ',
+    exportingMcp: '导出 mcp.json...',
+    exportingSkill: '导出 SKILL.md...',
+    scopeGlobal: '全局',
+    scopeProject: '项目',
+    scopeProjectWithDir: '项目 ({0})',
+  },
+  en: {
+    shopBtn: 'Buy Device',
+    shopBtnTitle: 'Buy Device',
+    shopTitle: 'Ai3D趣造',
+    shopTaobao: 'Taobao',
+    shopPinduoduo: 'Pinduoduo',
+    closeBtn: 'Close',
+    envTitle: 'Environment',
+    depsTitle: 'Dependencies',
+    installDepsBtn: 'Install Deps',
+    deviceBindingTitle: 'Device Binding',
+    scanDeviceBtn: 'Scan',
+    unbindDeviceBtn: 'Unbind',
+    installSettingsTitle: 'Install Settings',
+    scopeLabel: 'Scope:',
+    globalScope: 'Global',
+    projectScope: 'Project',
+    projectDirLabel: 'Project Dir:',
+    browsePlaceholder: 'Click to select project directory...',
+    browseBtn: 'Browse',
+    platformListTitle: 'Platforms',
+    thPlatform: 'Platform',
+    thType: 'Type',
+    thStatus: 'Status',
+    thActions: 'Actions',
+    otherPlatformsTitle: 'Other Platforms',
+    hintText: 'For tools without auto-install, export config files and follow platform docs to set up manually.',
+    exportMcpBtn: 'Export mcp.json',
+    exportSkillBtn: 'Export SKILL.md',
+    ready: 'Ready',
+    checking: 'Checking...',
+    needInstall: 'Required',
+    notInstalled: 'Not Installed',
+    installed: 'Installed',
+    unbound: 'Not Bound',
+    bound: 'Bound',
+    bind: 'Bind',
+    uninstall: 'Uninstall',
+    install: 'Install',
+    checkingEnvStatus: 'Checking environment...',
+    envCheckFailed: 'Env check failed: ',
+    installDepsStatus: 'Installing dependencies...',
+    depsInstalled: 'Dependencies installed',
+    depsInstallFailed: 'Dependency install failed: ',
+    loadingStatus: 'Loading platform status...',
+    loadFailed: 'Load failed: ',
+    selectProjectFirst: 'Please select a project directory first',
+    confirmInstall: 'Confirm install {0} ({1})?',
+    projectLevel: 'Project-level',
+    globalLevel: 'Global',
+    installingStatus: 'Installing {0} ({1})...',
+    installComplete: '{0} installed',
+    installError: '{0} install error',
+    confirmUninstall: 'Confirm uninstall {0}?',
+    uninstallingStatus: 'Uninstalling {0}...',
+    uninstalled: '{0} uninstalled',
+    uninstallError: '{0} uninstall error',
+    scanningStatus: 'Scanning devices...',
+    scanningLabel: 'Scanning...',
+    noDeviceFound: 'No devices found',
+    scanError: 'Scan error: ',
+    bindingStatus: 'Binding {0}...',
+    boundTo: 'Bound: {0}',
+    bindFailed: 'Bind failed: ',
+    unboundSuccess: 'Unbound',
+    exportedTo: 'Exported: {0}',
+    mcpExported: 'mcp.json exported',
+    skillExported: 'SKILL.md exported',
+    exportFailed: 'Export failed: ',
+    exportingMcp: 'Exporting mcp.json...',
+    exportingSkill: 'Exporting SKILL.md...',
+    scopeGlobal: 'Global',
+    scopeProject: 'Project',
+    scopeProjectWithDir: 'Project ({0})',
+  },
+};
+
+let lang = localStorage.getItem('ui-lang') || 'zh';
+
+function t(key, ...args) {
+  var dict = I18N[lang] || I18N.zh;
+  var text = (dict && dict[key]) || (I18N.zh[key]) || key;
+  for (var i = 0; i < args.length; i++) {
+    text = text.replace(new RegExp('\\{' + i + '\\}', 'g'), String(args[i]));
+  }
+  return text;
+}
+
+function updateUITexts() {
+  document.querySelectorAll('[data-i18n]').forEach(function(el) {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach(function(el) {
+    el.title = t(el.dataset.i18nTitle);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el) {
+    el.placeholder = t(el.dataset.i18nPlaceholder);
+  });
+}
+
+function updateLangButton() {
+  document.getElementById('btn-lang').textContent = lang === 'zh' ? 'EN' : '中';
+}
+
+function switchLang() {
+  lang = lang === 'zh' ? 'en' : 'zh';
+  localStorage.setItem('ui-lang', lang);
+  updateLangButton();
+  updateUITexts();
+  renderEnv();
+  renderDevice();
+  renderPlatforms();
+  setStatus(t('ready'));
+}
 
 // ── DOM refs ──────────────────────────────────────
 const $ = (sel) => document.querySelector(sel);
@@ -91,23 +284,21 @@ function checkDepsButton() {
 
 // ── Environment ───────────────────────────────────
 async function checkEnv() {
-  setStatus('检测环境中...');
-  dom.envPython.textContent = '检测中...';
+  setStatus(t('checkingEnvStatus'));
+  dom.envPython.textContent = t('checking');
   dom.envPython.className = 'badge checking';
-  dom.envBleak.textContent = '检测中...';
+  dom.envBleak.textContent = t('checking');
   dom.envBleak.className = 'badge checking';
-  dom.envMcp.textContent = '检测中...';
+  dom.envMcp.textContent = t('checking');
   dom.envMcp.className = 'badge checking';
 
   try {
     const env = await window.electronAPI.checkEnv();
-    setBadge(dom.envPython, env.python, env.pythonVer || 'OK', '未安装');
-    setBadge(dom.envBleak, env.bleak, 'OK', '需安装');
-    setBadge(dom.envMcp, env.mcp, 'OK', '需安装');
-    checkDepsButton();
-    setStatus('就绪');
+    state.env = env;
+    renderEnv();
+    setStatus(t('ready'));
   } catch (e) {
-    setStatus('环境检测失败: ' + e.message);
+    setStatus(t('envCheckFailed') + e.message);
   }
 }
 
@@ -116,16 +307,25 @@ function setBadge(el, ok, okText, failText) {
   el.className = 'badge ' + (ok ? 'ok' : 'fail');
 }
 
+function renderEnv() {
+  if (!state.env) return;
+  var env = state.env;
+  setBadge(dom.envPython, env.python, env.pythonVer || 'OK', t('notInstalled'));
+  setBadge(dom.envBleak, env.bleak, 'OK', t('needInstall'));
+  setBadge(dom.envMcp, env.mcp, 'OK', t('needInstall'));
+  checkDepsButton();
+}
+
 // ── Install Dependencies ──────────────────────────
 async function installDeps() {
   setBusy(true);
-  setStatus('安装依赖中... pip install bleak mcp');
+  setStatus(t('installDepsStatus'));
   try {
     const r = await window.electronAPI.installDeps();
     if (r.success) {
-      toast('依赖安装完成');
+      toast(t('depsInstalled'));
     } else {
-      toast('依赖安装失败: ' + r.output);
+      toast(t('depsInstallFailed') + r.output);
     }
     await checkEnv();
   } finally {
@@ -135,10 +335,9 @@ async function installDeps() {
 
 // ── Platform Status ───────────────────────────────
 async function loadStatus() {
-  setStatus('加载平台状态...');
+  setStatus(t('loadingStatus'));
   try {
     if (state.scope === 'project' && state.projectDir) {
-      // Check project-level config files in the selected directory
       const r = await window.electronAPI.getProjectStatus(state.projectDir);
       state.platforms = r.platforms;
     } else {
@@ -149,9 +348,9 @@ async function loadStatus() {
     }
     renderPlatforms();
   } catch (e) {
-    setStatus('加载失败: ' + e.message);
+    setStatus(t('loadFailed') + e.message);
   }
-  setStatus('就绪');
+  setStatus(t('ready'));
 }
 
 function renderPlatforms() {
@@ -159,35 +358,32 @@ function renderPlatforms() {
   tbody.innerHTML = '';
   const isProjectNoDir = state.scope === 'project' && !state.projectDir;
   const scopeLabel = state.scope === 'project'
-    ? (state.projectDir ? `项目 (${state.projectDir.split(/[/\\]/).pop()})` : '项目')
-    : '全局';
+    ? (state.projectDir ? t('scopeProjectWithDir', state.projectDir.split(/[/\\]/).pop()) : t('scopeProject'))
+    : t('scopeGlobal');
   dom.scopeLabel.textContent = scopeLabel;
 
   for (const p of state.platforms) {
-    // Type badges
     const types = PLATFORM_TYPES[p.key] || [];
     const badgesHtml = types.map(t =>
       `<span class="type-badge ${t}">${TYPE_LABELS[t] || t}</span>`
     ).join('');
 
-    // Status: show "-" when project mode but no dir selected
     let statusHtml;
     if (isProjectNoDir) {
       statusHtml = '<span class="platform-status dash">—</span>';
     } else {
       statusHtml = p.installed
-        ? '<span class="platform-status installed">已安装</span>'
-        : '<span class="platform-status uninstalled">未安装</span>';
+        ? '<span class="platform-status installed">' + t('installed') + '</span>'
+        : '<span class="platform-status uninstalled">' + t('notInstalled') + '</span>';
     }
 
-    // Actions: show "-" when project mode but no dir selected
     let actionsHtml;
     if (isProjectNoDir) {
       actionsHtml = '<span class="platform-status dash">—</span>';
     } else if (p.installed) {
-      actionsHtml = `<button class="btn danger small" data-action="uninstall" data-key="${esc(p.key)}">卸载</button>`;
+      actionsHtml = `<button class="btn danger small" data-action="uninstall" data-key="${esc(p.key)}">${t('uninstall')}</button>`;
     } else {
-      actionsHtml = `<button class="btn small" data-action="install" data-key="${esc(p.key)}">安装</button>`;
+      actionsHtml = `<button class="btn small" data-action="install" data-key="${esc(p.key)}">${t('install')}</button>`;
     }
 
     const tr = document.createElement('tr');
@@ -199,7 +395,6 @@ function renderPlatforms() {
     tbody.appendChild(tr);
   }
 
-  // Attach handlers (only when actions are buttons, not "-")
   tbody.querySelectorAll('button[data-action="install"]').forEach((btn) => {
     btn.addEventListener('click', () => installPlatform(btn.dataset.key));
   });
@@ -214,7 +409,7 @@ function renderDevice() {
     dom.deviceId.classList.remove('dim');
     dom.btnUnbind.disabled = false;
   } else {
-    dom.deviceId.textContent = '未绑定';
+    dom.deviceId.textContent = t('unbound');
     dom.deviceId.classList.add('dim');
     dom.btnUnbind.disabled = true;
   }
@@ -223,19 +418,19 @@ function renderDevice() {
 // ── Install / Uninstall ───────────────────────────
 async function installPlatform(key) {
   if (state.scope === 'project' && !state.projectDir) {
-    toast('请先选择项目目录');
+    toast(t('selectProjectFirst'));
     return;
   }
-  if (!confirm(`确认安装 ${key} (${state.scope === 'project' ? '项目级' : '全局'})？`)) return;
+  if (!confirm(t('confirmInstall', key, state.scope === 'project' ? t('projectLevel') : t('globalLevel')))) return;
 
   setBusy(true);
-  setStatus(`安装 ${key} (${state.scope}) 中...`);
+  setStatus(t('installingStatus', key, state.scope));
   try {
     const r = await window.electronAPI.installPlatform(key, state.scope, state.projectDir);
     if (r.success) {
-      toast(`${key} 安装完成`);
+      toast(t('installComplete', key));
     } else {
-      toast(`${key} 安装出错`);
+      toast(t('installError', key));
     }
     await loadStatus();
   } finally {
@@ -244,16 +439,16 @@ async function installPlatform(key) {
 }
 
 async function uninstallPlatform(key) {
-  if (!confirm(`确认卸载 ${key}？`)) return;
+  if (!confirm(t('confirmUninstall', key))) return;
 
   setBusy(true);
-  setStatus(`卸载 ${key} 中...`);
+  setStatus(t('uninstallingStatus', key));
   try {
     const r = await window.electronAPI.uninstallPlatform(key, state.scope, state.projectDir);
     if (r.success) {
-      toast(`${key} 已卸载`);
+      toast(t('uninstalled', key));
     } else {
-      toast(`${key} 卸载出错`);
+      toast(t('uninstallError', key));
     }
     await loadStatus();
   } finally {
@@ -264,20 +459,20 @@ async function uninstallPlatform(key) {
 // ── Device Scan / Bind ────────────────────────────
 async function scanDevices() {
   setBusy(true);
-  setStatus('扫描设备中...');
-  dom.scanResults.innerHTML = '<div class="hint" style="padding:8px">扫描中...</div>';
+  setStatus(t('scanningStatus'));
+  dom.scanResults.innerHTML = '<div class="hint" style="padding:8px">' + t('scanningLabel') + '</div>';
   try {
     const r = await window.electronAPI.scanDevices();
     if (r.devices.length === 0) {
-      dom.scanResults.innerHTML = '<div class="hint" style="padding:8px">未发现设备</div>';
+      dom.scanResults.innerHTML = '<div class="hint" style="padding:8px">' + t('noDeviceFound') + '</div>';
     } else {
       renderScanResults(r.devices);
     }
   } catch (e) {
-    dom.scanResults.innerHTML = `<div class="hint" style="padding:8px">扫描出错: ${esc(e.message)}</div>`;
+    dom.scanResults.innerHTML = '<div class="hint" style="padding:8px">' + t('scanError') + esc(e.message) + '</div>';
   } finally {
     setBusy(false);
-    setStatus('就绪');
+    setStatus(t('ready'));
   }
 }
 
@@ -289,13 +484,13 @@ function renderScanResults(devices) {
     div.innerHTML = `
       <div>
         <div>${esc(d.id)}</div>
-        <div class="ip">${esc(d.ip)}${d.bound ? ' [已绑定]' : ''}</div>
+        <div class="ip">${esc(d.ip)}${d.bound ? ' [' + t('bound') + ']' : ''}</div>
       </div>
     `;
     if (!d.bound) {
       const btn = document.createElement('button');
       btn.className = 'btn small';
-      btn.textContent = '绑定';
+      btn.textContent = t('bind');
       btn.addEventListener('click', (e) => { e.stopPropagation(); bindDevice(d.id); });
       div.appendChild(btn);
     }
@@ -305,16 +500,16 @@ function renderScanResults(devices) {
 
 async function bindDevice(deviceId) {
   setBusy(true);
-  setStatus(`绑定 ${deviceId}...`);
+  setStatus(t('bindingStatus', deviceId));
   try {
     const r = await window.electronAPI.bindDevice(deviceId);
     if (r.success) {
       state.deviceId = deviceId;
       renderDevice();
-      toast(`已绑定: ${deviceId}`);
-      await scanDevices(); // refresh scan results
+      toast(t('boundTo', deviceId));
+      await scanDevices();
     } else {
-      toast('绑定失败: ' + r.output);
+      toast(t('bindFailed') + r.output);
     }
   } finally {
     setBusy(false);
@@ -327,7 +522,7 @@ async function unbindDevice() {
     await window.electronAPI.unbindDevice();
     state.deviceId = '';
     renderDevice();
-    toast('绑定已解除');
+    toast(t('unboundSuccess'));
     dom.scanResults.innerHTML = '';
   } finally {
     setBusy(false);
@@ -339,14 +534,14 @@ async function exportMcp() {
   const dir = await window.electronAPI.selectSaveDir();
   if (!dir) return;
   setBusy(true);
-  setStatus('导出 mcp.json...');
+  setStatus(t('exportingMcp'));
   try {
     const r = await window.electronAPI.exportMcp(dir);
     if (r.success) {
-      dom.exportResult.textContent = `已导出: ${r.path}`;
-      toast('mcp.json 已导出');
+      dom.exportResult.textContent = t('exportedTo', r.path);
+      toast(t('mcpExported'));
     } else {
-      dom.exportResult.textContent = '导出失败: ' + r.output;
+      dom.exportResult.textContent = t('exportFailed') + r.output;
     }
   } finally {
     setBusy(false);
@@ -357,14 +552,14 @@ async function exportSkill() {
   const dir = await window.electronAPI.selectSaveDir();
   if (!dir) return;
   setBusy(true);
-  setStatus('导出 SKILL.md...');
+  setStatus(t('exportingSkill'));
   try {
     const r = await window.electronAPI.exportSkill(dir);
     if (r.success) {
-      dom.exportResult.textContent = `已导出: ${r.path}`;
-      toast('SKILL.md 已导出');
+      dom.exportResult.textContent = t('exportedTo', r.path);
+      toast(t('skillExported'));
     } else {
-      dom.exportResult.textContent = '导出失败: ' + r.error;
+      dom.exportResult.textContent = t('exportFailed') + r.error;
     }
   } finally {
     setBusy(false);
@@ -377,7 +572,7 @@ async function selectProjectDir() {
   if (dir) {
     state.projectDir = dir;
     dom.projectDirInput.value = dir;
-    loadStatus();  // Re-scan status for the selected project
+    loadStatus();
   }
 }
 
@@ -397,6 +592,9 @@ function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').
 
 // ── Init ──────────────────────────────────────────
 function init() {
+  updateUITexts();
+  updateLangButton();
+
   // Scope radio
   dom.scopeRadios.forEach((r) => r.addEventListener('change', onScopeChange));
 
@@ -414,6 +612,9 @@ function init() {
   dom.btnExportMcp.addEventListener('click', exportMcp);
   dom.btnExportSkill.addEventListener('click', exportSkill);
 
+  // Language toggle
+  document.getElementById('btn-lang').addEventListener('click', switchLang);
+
   // Load data
   checkEnv();
   loadStatus();
@@ -427,7 +628,6 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('shop-modal').classList.add('show');
     });
   }
-  // Set logo src — electron resolves file:// for resources alongside app
   document.getElementById('shop-logo').src = 'ai3D趣造LOGO.jpg';
 });
 

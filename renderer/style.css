@@ -248,6 +248,15 @@ footer {
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
+/* ── Language Toggle ──────────────────────────── */
+#btn-lang {
+  position: absolute; right: 108px; top: 50%; transform: translateY(-50%);
+  background: var(--bg-hover); color: var(--text); border: 1px solid var(--border);
+  padding: 4px 10px; border-radius: 6px; cursor: pointer;
+  font-size: 0.78rem; font-weight: 600;
+}
+#btn-lang:hover { background: var(--border); }
+
 /* ── Shop ──────────────────────────────────────── */
 #btn-shop {
   position: absolute; right: 12px; top: 50%; transform: translateY(-50%);

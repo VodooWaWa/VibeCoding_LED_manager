@@ -1,0 +1,1 @@
+cd Dclaude_projectcoding lightVibeCoding_LED_manager && npm install && CSC_IDENTITY_AUTO_DISCOVERY=false npx electron-builder --win portable
