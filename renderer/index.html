@@ -2,15 +2,27 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
-  <title>Vibe Coding LED Manager</title>
+  <title>Vibe Coding LED Manager - Ai3D趣造</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div id="app">
   <header>
-    <h1>Vibe Coding LED Manager</h1>
+    <h1>Vibe Coding LED Manager - Ai3D趣造</h1>
+    <button id="btn-shop" title="设备购买">设备购买</button>
   </header>
+  <div id="shop-modal" class="modal-overlay">
+    <div class="modal-content">
+      <img id="shop-logo" src="" alt="Ai3D趣造" style="width:120px;height:120px;border-radius:12px;object-fit:cover;">
+      <h3>Ai3D趣造</h3>
+      <div class="shop-links">
+        <a class="btn" href="#" onclick="openExternal('https://shop106055843.taobao.com/category.htm?spm=pc_detail.30350276.shop_block.dshopinfo.3e907dd6X0ddB7')">淘宝</a>
+        <a class="btn" href="#" onclick="openExternal('https://mobile.yangkeduo.com/mall_page.html?ps=kSxgffPoX9')">拼多多</a>
+      </div>
+      <button class="btn btn-close" onclick="document.getElementById('shop-modal').classList.remove('show')">关闭</button>
+    </div>
+  </div>
 
   <main>
     <!-- Left Panel -->

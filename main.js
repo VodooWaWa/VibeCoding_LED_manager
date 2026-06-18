@@ -59,10 +59,10 @@ function runPython(args, opts = {}) {
     child.stdout.on('data', (d) => { stdout += d.toString(); });
     child.stderr.on('data', (d) => { stderr += d.toString(); });
     child.on('close', (code) => {
-      resolve({ code, stdout, stderr });
+      resolve({ success: code === 0, code, stdout, stderr: stderr || '' });
     });
     child.on('error', (err) => {
-      resolve({ code: -1, stdout, stderr: err.message });
+      resolve({ success: false, code: -1, stdout: '', stderr: err.message });
     });
   });
 }
@@ -89,39 +89,51 @@ ipcMain.handle('install-deps', async () => {
 });
 
 ipcMain.handle('get-status', async () => {
-  const r = await runPython(['install.py', 'status']);
-  return r.stdout;
+  const r = await runPython([INSTALL_PY, 'status']);
+  const platforms = [];
+  const lines = r.stdout.split('\n');
+  for (const line of lines) {
+    const m = line.match(/^\s*\[(已安装|未安装)\]\s+(\S+):\s+(.+)/);
+    if (m) platforms.push({ key: m[2], name: m[3], installed: m[1] === '已安装' });
+  }
+  const bindLine = lines.find((l) => l.startsWith('设备绑定:'));
+  let deviceId = '';
+  if (bindLine) {
+    const m = bindLine.match(/设备绑定:\s*(.+)/);
+    if (m && m[1] !== '未设置') deviceId = m[1].trim();
+  }
+  return { platforms, deviceId, raw: r.stdout };
 });
 
 ipcMain.handle('install-platform', async (_e, platform, scope) => {
-  const args = ['install.py', 'install', '--target', platform, '--scope', scope];
+  const args = [INSTALL_PY, 'install', '--target', platform, '--scope', scope];
   const r = await runPython(args, { timeout: 30000 });
-  return { ok: r.code === 0, stdout: r.stdout, stderr: r.stderr };
+  return { success: r.success, stdout: r.stdout, stderr: r.stderr };
 });
 
 ipcMain.handle('uninstall-platform', async (_e, platform, scope) => {
-  const args = ['install.py', 'uninstall', '--target', platform, '--scope', scope];
+  const args = [INSTALL_PY, 'uninstall', '--target', platform, '--scope', scope];
   const r = await runPython(args, { timeout: 30000 });
-  return { ok: r.code === 0, stdout: r.stdout, stderr: r.stderr };
+  return { success: r.success, stdout: r.stdout, stderr: r.stderr };
 });
 
 ipcMain.handle('scan-devices', async () => {
-  const r = await runPython(['install.py', 'scan']);
+  const r = await runPython([INSTALL_PY, 'scan']);
   return r.stdout;
 });
 
 ipcMain.handle('bind-device', async (_e, deviceId) => {
-  const r = await runPython(['install.py', 'bind', deviceId]);
+  const r = await runPython([INSTALL_PY, 'bind', deviceId]);
   return { ok: r.code === 0, stdout: r.stdout, stderr: r.stderr };
 });
 
 ipcMain.handle('unbind-device', async () => {
-  const r = await runPython(['install.py', 'unbind']);
+  const r = await runPython([INSTALL_PY, 'unbind']);
   return { ok: r.code === 0, stdout: r.stdout, stderr: r.stderr };
 });
 
 ipcMain.handle('export-mcp', async (_e, outputPath) => {
-  const args = outputPath ? ['install.py', 'export', outputPath] : ['install.py', 'export'];
+  const args = outputPath ? [INSTALL_PY, 'export', outputPath] : [INSTALL_PY, 'export'];
   const r = await runPython(args);
   return { ok: r.code === 0, stdout: r.stdout, stderr: r.stderr };
 });
@@ -131,6 +143,11 @@ ipcMain.handle('show-item-in-folder', async (_e, filePath) => {
   shell.showItemInFolder(filePath);
 });
 
+ipcMain.handle('open-external', async (_e, url) => {
+  const { shell } = require('electron');
+  await shell.openExternal(url);
+});
+
 // ── Window ───────────────────────────────────────────────
 
 function createWindow() {
@@ -138,7 +155,7 @@ function createWindow() {
   const win = new BrowserWindow({
     width: 960,
     height: 680,
-    title: 'Vibe Coding LED Manager',
+    title: 'Vibe Coding LED Manager - Ai3D趣造',
     icon: path.join(__dirname, 'icon.ico'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),

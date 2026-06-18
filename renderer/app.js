@@ -419,4 +419,18 @@ function init() {
   loadStatus();
 }
 
+// Shop button
+document.addEventListener('DOMContentLoaded', function() {
+  const btnShop = document.getElementById('btn-shop');
+  if (btnShop) {
+    btnShop.addEventListener('click', function() {
+      document.getElementById('shop-modal').classList.add('show');
+    });
+  }
+  // Set logo src — electron resolves file:// for resources alongside app
+  document.getElementById('shop-logo').src = 'ai3D趣造LOGO.jpg';
+});
+
+function openExternal(url) { window.electronAPI.openExternal(url); }
+
 init();

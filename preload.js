@@ -16,4 +16,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   exportSkill: (outputDir) => ipcRenderer.invoke('export-skill', outputDir),
   selectDir: () => ipcRenderer.invoke('select-dir'),
   selectSaveDir: () => ipcRenderer.invoke('select-save-dir'),
+  openExternal: (url) => ipcRenderer.invoke('open-external', url),
 });

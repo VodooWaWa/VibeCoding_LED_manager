@@ -35,6 +35,7 @@ body {
 
 /* ── Header ────────────────────────────────────── */
 header {
+  position: relative;
   padding: 14px 20px;
   border-bottom: 1px solid var(--border);
   background: var(--bg-card);
@@ -246,3 +247,31 @@ footer {
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── Shop ──────────────────────────────────────── */
+#btn-shop {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  background: var(--accent); color: #fff; border: none;
+  padding: 4px 14px; border-radius: 6px; cursor: pointer;
+  font-size: 0.82em; font-weight: 500;
+}
+#btn-shop:hover { opacity: 0.85; }
+.modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  z-index: 100; align-items: center; justify-content: center;
+}
+.modal-overlay.show { display: flex; }
+.modal-content {
+  background: var(--surface); border-radius: 16px; padding: 28px;
+  text-align: center; max-width: 260px; width: 90%;
+}
+.modal-content h3 { margin: 12px 0 16px; font-size: 1.1em; }
+.shop-links { display: flex; gap: 10px; justify-content: center; margin-bottom: 14px; }
+.shop-links a {
+  flex: 1; padding: 8px 0; border: 1px solid var(--accent); border-radius: 8px;
+  color: #fff; text-decoration: none; font-size: 0.9em; text-align: center;
+  background: var(--accent);
+}
+.shop-links a:hover { opacity: 0.85; }
+.btn-close { background: transparent; border: 1px solid #555; color: var(--text-secondary); padding: 6px 20px; border-radius: 6px; cursor: pointer; }
+.btn-close:hover { border-color: var(--text); color: var(--text); }
