@@ -44,3 +44,39 @@ jobs:
         with:
           name: ${{ matrix.target }}
           path: dist/Vibe-Coding-LED-Manager-*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Rename and prepare release files
+        run: |
+          mkdir release-files
+          for f in artifacts/**/Vibe-Coding-LED-Manager-*; do
+            name=$(basename "$f")
+            # Transform: Vibe-Coding-LED-Manager-1.0.0-win-x64.exe → VibeCoding_LED_manager_win_x64.exe
+            # Remove version, replace dashes, simplify name
+            newname=$(echo "$name" \
+              | sed 's/Vibe-Coding-LED-Manager-/VibeCoding_LED_manager_/' \
+              | sed 's/-[0-9.]*-/_/' \
+              | sed 's/\.exe$/.exe/' \
+              | sed 's/\.dmg$/.dmg/' \
+              | sed 's/\.AppImage$/.AppImage/')
+            cp "$f" "release-files/$newname"
+            echo "  $name → $newname"
+          done
+          ls -la release-files/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}
+          name: "Build #${{ github.run_number }}"
+          files: release-files/*
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
