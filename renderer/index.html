@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Vibe Coding LED Manager</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="app">
+  <header>
+    <h1>Vibe Coding LED Manager</h1>
+  </header>
+
+  <main>
+    <!-- Left Panel -->
+    <aside id="left-panel">
+      <!-- Environment -->
+      <section class="card">
+        <h2>运行环境</h2>
+        <div id="env-status">
+          <div class="env-row"><span class="label">Python</span><span id="env-python" class="badge">检测中...</span></div>
+        </div>
+      </section>
+
+      <!-- Dependencies -->
+      <section class="card">
+        <h2>依赖库</h2>
+        <div id="dep-status">
+          <div class="env-row"><span class="label">bleak</span><span id="env-bleak" class="badge">检测中...</span></div>
+          <div class="env-row"><span class="label">mcp</span><span id="env-mcp" class="badge">检测中...</span></div>
+        </div>
+        <button id="btn-install-deps" class="btn secondary" disabled>安装依赖</button>
+      </section>
+
+      <!-- Device Binding -->
+      <section class="card">
+        <h2>设备绑定</h2>
+        <div id="device-info">
+          <span id="device-id" class="dim">未绑定</span>
+        </div>
+        <div class="btn-row">
+          <button id="btn-scan" class="btn">扫描设备</button>
+          <button id="btn-unbind" class="btn danger" disabled>解除绑定</button>
+        </div>
+        <div id="scan-results"></div>
+      </section>
+    </aside>
+
+    <!-- Right Panel -->
+    <section id="right-panel">
+      <!-- Install Settings -->
+      <div class="card">
+        <h2>安装设置</h2>
+        <div class="settings-row">
+          <div class="scope-selector">
+            <span class="label">安装范围:</span>
+            <label class="radio"><input type="radio" name="scope" value="global" checked> 全局</label>
+            <label class="radio"><input type="radio" name="scope" value="project"> 项目</label>
+          </div>
+          <div id="project-dir-group" class="dir-selector" style="display:none">
+            <span class="label">项目目录:</span>
+            <input id="project-dir" type="text" readonly placeholder="点击浏览选择项目目录...">
+            <button id="btn-browse" class="btn small">浏览</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Platform List -->
+      <div class="card">
+        <h2>平台列表 <span class="dim">—</span> <span class="dim" id="scope-label">全局</span></h2>
+        <table id="platform-table">
+          <thead><tr><th>平台</th><th>类型</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody id="platform-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- Other Platforms -->
+      <div class="card">
+        <h2>其他平台</h2>
+        <p class="hint">不支持自动安装的工具，导出配置文件后参考平台文档手动配置。</p>
+        <div class="btn-row">
+          <button id="btn-export-mcp" class="btn">导出 mcp.json</button>
+          <button id="btn-export-skill" class="btn">导出 SKILL.md</button>
+        </div>
+        <div id="export-result" class="hint" style="margin-top:8px"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span id="status-bar">就绪</span>
+  </footer>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

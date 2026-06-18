@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "esp32-led": {
+      "command": "C:\\Users\\Vodoo\\anaconda3\\python.exe",
+      "args": [
+        "C:\\Users\\Vodoo\\.local\\share\\esp32-led\\transport\\server.py"
+      ]
+    }
+  }
+}

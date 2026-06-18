@@ -1,0 +1,74 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {"matcher": "", "hooks": [
+        {"type": "command", "command": "python \"<PROJECT_DIR>/transport/send.py\"", "timeout": 2}
+      ]}
+    ],
+    "UserPromptSubmit": [
+      {"matcher": "", "hooks": [
+        {"type": "command", "command": "python \"<PROJECT_DIR>/transport/send.py\"", "timeout": 2}
+      ]}
+    ],
+    "PreToolUse": [
+      {"matcher": "", "hooks": [
+        {"type": "command", "command": "python \"<PROJECT_DIR>/transport/send.py\"", "timeout": 2}
+      ]}
+    ],
+    "PostToolUse": [
+      {"matcher": "", "hooks": [
+        {"type": "command", "command": "python \"<PROJECT_DIR>/transport/send.py\"", "timeout": 2}
+      ]}
+    ],
+    "PostToolUseFailure": [
+      {"matcher": "", "hooks": [
+        {"type": "command", "command": "python \"<PROJECT_DIR>/transport/send.py\"", "timeout": 2}
+      ]}
+    ],
+    "PermissionRequest": [
+      {"matcher": "", "hooks": [
+        {"type": "command", "command": "python \"<PROJECT_DIR>/transport/send.py\"", "timeout": 2}
+      ]}
+    ],
+    "Stop": [
+      {"matcher": "", "hooks": [
+        {"type": "command", "command": "python \"<PROJECT_DIR>/transport/send.py\"", "timeout": 2}
+      ]}
+    ],
+    "StopFailure": [
+      {"matcher": "", "hooks": [
+        {"type": "command", "command": "python \"<PROJECT_DIR>/transport/send.py\"", "timeout": 2}
+      ]}
+    ],
+    "SubagentStart": [
+      {"matcher": "", "hooks": [
+        {"type": "command", "command": "python \"<PROJECT_DIR>/transport/send.py\"", "timeout": 2}
+      ]}
+    ],
+    "SubagentStop": [
+      {"matcher": "", "hooks": [
+        {"type": "command", "command": "python \"<PROJECT_DIR>/transport/send.py\"", "timeout": 2}
+      ]}
+    ],
+    "SessionEnd": [
+      {"matcher": "", "hooks": [
+        {"type": "command", "command": "python \"<PROJECT_DIR>/transport/send.py\"", "timeout": 2}
+      ]}
+    ],
+    "PreCompact": [
+      {"matcher": "", "hooks": [
+        {"type": "command", "command": "python \"<PROJECT_DIR>/transport/send.py\"", "timeout": 2}
+      ]}
+    ],
+    "PostCompact": [
+      {"matcher": "", "hooks": [
+        {"type": "command", "command": "python \"<PROJECT_DIR>/transport/send.py\"", "timeout": 2}
+      ]}
+    ],
+    "Notification": [
+      {"matcher": "", "hooks": [
+        {"type": "command", "command": "python \"<PROJECT_DIR>/transport/send.py\"", "timeout": 2}
+      ]}
+    ]
+  }
+}

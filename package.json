@@ -1,0 +1,57 @@
+{
+  "name": "vibe-coding-led-manager",
+  "version": "1.0.0",
+  "description": "Vibe Coding AI 状态指示灯管理器",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win portable",
+    "build:mac": "electron-builder --mac dmg",
+    "build:linux": "electron-builder --linux AppImage",
+    "build:all": "electron-builder --win portable --mac dmg --linux AppImage"
+  },
+  "build": {
+    "appId": "com.vibecoding.led-manager",
+    "productName": "Vibe Coding LED Manager",
+    "icon": "icon.ico",
+    "directories": {
+      "output": "dist"
+    },
+    "extraResources": [
+      { "from": "install.py", "to": "install.py" },
+      { "from": "mcp.json", "to": "mcp.json" },
+      { "from": "transport", "to": "transport" },
+      { "from": "skill", "to": "skill" },
+      { "from": "hooks", "to": "hooks" },
+      { "from": "plugin", "to": "plugin" }
+    ],
+    "win": {
+      "target": "portable",
+      "icon": "icon.ico",
+      "signAndEditExecutable": false
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "icon.png",
+      "category": "public.app-category.developer-tools"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "icon.png",
+      "category": "Development"
+    },
+    "portable": {
+      "artifactName": "Vibe-Coding-LED-Manager-${version}-win-x64.exe"
+    },
+    "dmg": {
+      "artifactName": "Vibe-Coding-LED-Manager-${version}-mac.dmg"
+    },
+    "appImage": {
+      "artifactName": "Vibe-Coding-LED-Manager-${version}-linux.AppImage"
+    }
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  }
+}
