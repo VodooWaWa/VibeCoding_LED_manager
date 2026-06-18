@@ -9,6 +9,10 @@ on:
       - '**.md'
   workflow_dispatch:
 
+permissions:
+  contents: write
+  actions: read
+
 jobs:
   build:
     strategy:
@@ -77,9 +81,9 @@ jobs:
           echo "count: $(ls release-files/ | wc -l)"
 
       - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: release-files/*
-          fail_on_unmatched_files: false
+        run: |
+          gh release create "v${{ github.run_number }}" release-files/* \
+            --title "Build #${{ github.run_number }}" \
+            --notes "Automated build from commit ${{ github.sha }}"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
