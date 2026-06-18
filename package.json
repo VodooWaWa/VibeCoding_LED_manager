@@ -5,10 +5,10 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build:win": "electron-builder --win portable",
-    "build:mac": "electron-builder --mac dmg",
-    "build:linux": "electron-builder --linux AppImage",
-    "build:all": "electron-builder --win portable --mac dmg --linux AppImage"
+    "build:win": "electron-builder --win portable --x64 --arm64",
+    "build:mac": "electron-builder --mac dmg --x64 --arm64",
+    "build:linux": "electron-builder --linux AppImage --x64 --arm64",
+    "build:all": "electron-builder --win portable --x64 --arm64 --mac dmg --x64 --arm64 --linux AppImage --x64 --arm64"
   },
   "build": {
     "appId": "com.vibecoding.led-manager",
@@ -41,13 +41,13 @@
       "category": "Development"
     },
     "portable": {
-      "artifactName": "Vibe-Coding-LED-Manager-${version}-win-x64.exe"
+      "artifactName": "Vibe-Coding-LED-Manager-${version}-win-${arch}.exe"
     },
     "dmg": {
-      "artifactName": "Vibe-Coding-LED-Manager-${version}-mac.dmg"
+      "artifactName": "Vibe-Coding-LED-Manager-${version}-mac-${arch}.dmg"
     },
     "appImage": {
-      "artifactName": "Vibe-Coding-LED-Manager-${version}-linux.AppImage"
+      "artifactName": "Vibe-Coding-LED-Manager-${version}-linux-${arch}.AppImage"
     }
   },
   "devDependencies": {
