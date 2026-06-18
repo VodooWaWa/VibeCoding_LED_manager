@@ -59,11 +59,12 @@ jobs:
 
       - name: Rename and prepare release files
         run: |
+          echo "=== artifact tree ==="
+          find artifacts/ -type f -ls
           mkdir release-files
           for f in artifacts/**/Vibe-Coding-LED-Manager-*; do
+            [ -f "$f" ] || continue
             name=$(basename "$f")
-            ext="${name##*.}"
-            # Transform: Vibe-Coding-LED-Manager-1.0.0-win-x64.exe → VibeCoding_LED_manager_win_x64.exe
             newname=$(echo "$name" \
               | sed -E 's/^Vibe-Coding-LED-Manager-/VibeCoding_LED_manager_/' \
               | sed -E 's/-[0-9]+\.[0-9]+\.[0-9]+-/_/' \
@@ -71,11 +72,14 @@ jobs:
             cp "$f" "release-files/$newname"
             echo "  $name → $newname"
           done
+          echo "=== release-files ==="
           ls -la release-files/
+          echo "count: $(ls release-files/ | wc -l)"
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           files: release-files/*
+          fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
