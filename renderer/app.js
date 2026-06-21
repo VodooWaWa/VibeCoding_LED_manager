@@ -1,25 +1,13 @@
 // ── State ──────────────────────────────────────────
 const state = {
   platforms: [],
+  devices: [],
+  exportedPath: null,
   deviceId: '',
   projectDir: '',
   scope: 'global',
   busy: false,
   env: null,
-};
-
-// Platform types for badge display
-const PLATFORM_TYPES = {
-  claude:    ['hooks', 'skill', 'mcp'],
-  codex:     ['hooks', 'skill', 'mcp'],
-  cursor:    ['skill', 'mcp'],
-  windsurf:  ['skill', 'mcp'],
-  trae:      ['skill', 'mcp'],
-  traecn:    ['skill', 'mcp'],
-  opencode:  ['plugin', 'skill', 'mcp'],
-  mimocode:  ['plugin', 'skill', 'mcp'],
-  openclaw:  ['skill', 'mcp'],
-  hermes:    ['skill', 'mcp'],
 };
 
 const TYPE_LABELS = {
@@ -58,8 +46,7 @@ const I18N = {
     thActions: '操作',
     otherPlatformsTitle: '其他平台',
     hintText: '不支持自动安装的工具，导出配置文件后参考平台文档手动配置。',
-    exportMcpBtn: '导出 mcp.json',
-    exportSkillBtn: '导出 SKILL.md',
+    exportPkgBtn: '导出完整包',
     ready: '就绪',
     checking: '检测中...',
     needInstall: '需安装',
@@ -67,6 +54,7 @@ const I18N = {
     installed: '已安装',
     unbound: '未绑定',
     bound: '已绑定',
+    visit: '访问',
     bind: '绑定',
     uninstall: '卸载',
     install: '安装',
@@ -97,11 +85,8 @@ const I18N = {
     bindFailed: '绑定失败: ',
     unboundSuccess: '绑定已解除',
     exportedTo: '已导出: {0}',
-    mcpExported: 'mcp.json 已导出',
-    skillExported: 'SKILL.md 已导出',
     exportFailed: '导出失败: ',
-    exportingMcp: '导出 mcp.json...',
-    exportingSkill: '导出 SKILL.md...',
+    exportingPkg: '导出包...',
     scopeGlobal: '全局',
     scopeProject: '项目',
     scopeProjectWithDir: '项目 ({0})',
@@ -133,8 +118,7 @@ const I18N = {
     thActions: 'Actions',
     otherPlatformsTitle: 'Other Platforms',
     hintText: 'For tools without auto-install, export config files and follow platform docs to set up manually.',
-    exportMcpBtn: 'Export mcp.json',
-    exportSkillBtn: 'Export SKILL.md',
+    exportPkgBtn: 'Export Package',
     ready: 'Ready',
     checking: 'Checking...',
     needInstall: 'Required',
@@ -142,6 +126,7 @@ const I18N = {
     installed: 'Installed',
     unbound: 'Not Bound',
     bound: 'Bound',
+    visit: 'Visit',
     bind: 'Bind',
     uninstall: 'Uninstall',
     install: 'Install',
@@ -172,8 +157,6 @@ const I18N = {
     bindFailed: 'Bind failed: ',
     unboundSuccess: 'Unbound',
     exportedTo: 'Exported: {0}',
-    mcpExported: 'mcp.json exported',
-    skillExported: 'SKILL.md exported',
     exportFailed: 'Export failed: ',
     exportingMcp: 'Exporting mcp.json...',
     exportingSkill: 'Exporting SKILL.md...',
@@ -218,6 +201,8 @@ function switchLang() {
   renderEnv();
   renderDevice();
   renderPlatforms();
+  if (state.devices && state.devices.length) renderScanResults(state.devices);
+  if (state.exportedPath) dom.exportResult.textContent = t('exportedTo', state.exportedPath);
   setStatus(t('ready'));
 }
 
@@ -246,8 +231,7 @@ const dom = {
   platformTbody: $('#platform-tbody'),
   scopeLabel: $('#scope-label'),
   // Export
-  btnExportMcp: $('#btn-export-mcp'),
-  btnExportSkill: $('#btn-export-skill'),
+  btnExportPkg: $('#btn-export-pkg'),
   exportResult: $('#export-result'),
 };
 
@@ -272,6 +256,7 @@ function setBusy(busy) {
     if (b.id === 'btn-install-deps' && !busy) checkDepsButton();
     else b.disabled = busy;
   });
+  if (!busy) { renderDevice(); renderPlatforms(); }
 }
 
 function checkDepsButton() {
@@ -363,7 +348,11 @@ function renderPlatforms() {
   dom.scopeLabel.textContent = scopeLabel;
 
   for (const p of state.platforms) {
-    const types = PLATFORM_TYPES[p.key] || [];
+    const types = [];
+    if (p.has_hooks) types.push('hooks');
+    if (p.has_plugin) types.push('plugin');
+    types.push('skill');
+    if (state.scope === 'project' ? p.has_project_mcp : p.has_mcp) types.push('mcp');
     const badgesHtml = types.map(t =>
       `<span class="type-badge ${t}">${TYPE_LABELS[t] || t}</span>`
     ).join('');
@@ -463,10 +452,12 @@ async function scanDevices() {
   dom.scanResults.innerHTML = '<div class="hint" style="padding:8px">' + t('scanningLabel') + '</div>';
   try {
     const r = await window.electronAPI.scanDevices();
-    if (r.devices.length === 0) {
+    if (!r || !r.devices) { dom.scanResults.innerHTML = '<div class="hint" style="padding:8px">' + t('scanError') + '</div>'; return; }
+    state.devices = r.devices || [];
+    if (state.devices.length === 0) {
       dom.scanResults.innerHTML = '<div class="hint" style="padding:8px">' + t('noDeviceFound') + '</div>';
     } else {
-      renderScanResults(r.devices);
+      renderScanResults(state.devices);
     }
   } catch (e) {
     dom.scanResults.innerHTML = '<div class="hint" style="padding:8px">' + t('scanError') + esc(e.message) + '</div>';
@@ -487,13 +478,21 @@ function renderScanResults(devices) {
         <div class="ip">${esc(d.ip)}${d.bound ? ' [' + t('bound') + ']' : ''}</div>
       </div>
     `;
+    const btnRow = document.createElement('div');
+    btnRow.className = 'btn-row';
+    const visitBtn = document.createElement('button');
+    visitBtn.className = 'btn small';
+    visitBtn.textContent = t('visit');
+    visitBtn.addEventListener('click', (e) => { e.stopPropagation(); window.electronAPI.openExternal('http://' + d.ip); });
+    btnRow.appendChild(visitBtn);
     if (!d.bound) {
-      const btn = document.createElement('button');
-      btn.className = 'btn small';
-      btn.textContent = t('bind');
-      btn.addEventListener('click', (e) => { e.stopPropagation(); bindDevice(d.id); });
-      div.appendChild(btn);
+      const bindBtn = document.createElement('button');
+      bindBtn.className = 'btn small';
+      bindBtn.textContent = t('bind');
+      bindBtn.addEventListener('click', (e) => { e.stopPropagation(); bindDevice(d.id); });
+      btnRow.appendChild(bindBtn);
     }
+    div.appendChild(btnRow);
     dom.scanResults.appendChild(div);
   }
 }
@@ -506,8 +505,11 @@ async function bindDevice(deviceId) {
     if (r.success) {
       state.deviceId = deviceId;
       renderDevice();
+      if (state.devices && state.devices.length) {
+        state.devices = state.devices.map(d => d.id === deviceId ? { ...d, bound: true } : d);
+        renderScanResults(state.devices);
+      }
       toast(t('boundTo', deviceId));
-      await scanDevices();
     } else {
       toast(t('bindFailed') + r.output);
     }
@@ -530,36 +532,19 @@ async function unbindDevice() {
 }
 
 // ── Export ────────────────────────────────────────
-async function exportMcp() {
+async function exportPkg() {
   const dir = await window.electronAPI.selectSaveDir();
   if (!dir) return;
   setBusy(true);
-  setStatus(t('exportingMcp'));
+  setStatus(t('exportingPkg'));
   try {
-    const r = await window.electronAPI.exportMcp(dir);
+    const r = await window.electronAPI.exportPkg(dir);
     if (r.success) {
+      state.exportedPath = r.path;
       dom.exportResult.textContent = t('exportedTo', r.path);
-      toast(t('mcpExported'));
     } else {
-      dom.exportResult.textContent = t('exportFailed') + r.output;
-    }
-  } finally {
-    setBusy(false);
-  }
-}
-
-async function exportSkill() {
-  const dir = await window.electronAPI.selectSaveDir();
-  if (!dir) return;
-  setBusy(true);
-  setStatus(t('exportingSkill'));
-  try {
-    const r = await window.electronAPI.exportSkill(dir);
-    if (r.success) {
-      dom.exportResult.textContent = t('exportedTo', r.path);
-      toast(t('skillExported'));
-    } else {
-      dom.exportResult.textContent = t('exportFailed') + r.error;
+      state.exportedPath = null;
+      dom.exportResult.textContent = t('exportFailed') + (r.error || r.output || '');
     }
   } finally {
     setBusy(false);
@@ -609,8 +594,7 @@ function init() {
   dom.btnBrowse.addEventListener('click', selectProjectDir);
 
   // Export
-  dom.btnExportMcp.addEventListener('click', exportMcp);
-  dom.btnExportSkill.addEventListener('click', exportSkill);
+  dom.btnExportPkg.addEventListener('click', exportPkg);
 
   // Language toggle
   document.getElementById('btn-lang').addEventListener('click', switchLang);

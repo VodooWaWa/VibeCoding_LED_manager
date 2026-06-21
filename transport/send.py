@@ -22,11 +22,11 @@ from transport.transport_ble import send_state_ble, load_ble_address, save_ble_a
 # Device discovery
 # ============================================================
 
-_cache_dir = Path.home() / ".local" / "share" / "esp32-led"
-_cache_file = _cache_dir / ".esp32_ip_cache"
-_last_fail_file = _cache_dir / ".esp32_last_fail"
-_state_file = _cache_dir / ".esp32_last_state"
-_device_id_file = _cache_dir / ".esp32_device_id"
+_cache_dir = Path.home() / ".local" / "share" / "3dai-led"
+_cache_file = _cache_dir / ".3dai_ip_cache"
+_last_fail_file = _cache_dir / ".3dai_last_fail"
+_state_file = _cache_dir / ".3dai_last_state"
+_device_id_file = _cache_dir / ".3dai_device_id"
 _BUSY_DEBOUNCE_MS = 500
 _log_file = _cache_dir / "send_debug.log"
 _LOG_MAX_SIZE = 1 * 1024 * 1024
@@ -61,7 +61,7 @@ def _log_write(msg: str):
 
 
 def load_bound_device() -> str:
-    """Return the bound device ID (e.g. 'esp32-led-7604F1A8'), or ''."""
+    """Return the bound device ID (e.g. '3dai-led-7604F1A8'), or ''."""
     try:
         if _device_id_file.exists():
             return _device_id_file.read_text().strip()
@@ -116,20 +116,20 @@ def discover_host() -> str:
 def discover_host_background():
     """Spawn an independent background *process* that scans the full subnet
     for the ESP32 LED device.  The process survives the parent send.py exit
-    and writes ``.esp32_ip_cache`` when found, so the **next** hook
+    and writes ``.3dai_ip_cache`` when found, so the **next** hook
     invocation picks up the cached address instantly.
 
     We use a subprocess instead of a daemon thread because Python kills
     daemon threads when the main thread exits — the scan would never
     complete and the cache would stay empty forever.
 
-    A lock file (``.esp32_scan_lock``) prevents concurrent scans when
+    A lock file (``.3dai_scan_lock``) prevents concurrent scans when
     hooks fire rapidly before the cache is populated.
     """
     import subprocess
 
     # Lock file prevents duplicate concurrent scans
-    lock_file = _cache_dir / ".esp32_scan_lock"
+    lock_file = _cache_dir / ".3dai_scan_lock"
     try:
         if lock_file.exists():
             age = __import__("time").time() - lock_file.stat().st_mtime
@@ -266,9 +266,35 @@ CODEX_EVENT_TO_STATE = {
 }
 
 
+def _get_hook_event(payload: dict) -> str:
+    """Extract event name — both Claude Code and Codex CLI use
+    hook_event_name at the top level of the stdin JSON payload."""
+    return str(payload.get("hook_event_name", ""))
+
+
+def _get_hook_cwd(payload: dict) -> str:
+    """Extract cwd — try top-level first (Claude), then hook_event (Codex)."""
+    cwd = str(payload.get("cwd", ""))
+    if not cwd:
+        hook_event = payload.get("hook_event", {})
+        if isinstance(hook_event, dict):
+            cwd = str(hook_event.get("cwd", ""))
+    return cwd
+
+
+def _get_hook_agent_type(payload: dict) -> str:
+    """Extract subagent type — try top-level first (Claude), then hook_event (Codex)."""
+    agent_type = str(payload.get("agent_type", "")).lower()
+    if not agent_type:
+        hook_event = payload.get("hook_event", {})
+        if isinstance(hook_event, dict):
+            agent_type = str(hook_event.get("agent_type", "")).lower()
+    return agent_type
+
+
 def _infer_state(payload: dict) -> str | None:
     """Map hook payload (Claude Code or Codex) to LED state."""
-    event = str(payload.get("hook_event_name", ""))
+    event = _get_hook_event(payload)
 
     if event == "Notification":
         return CLAUDE_NOTIFICATION_TO_STATE.get(
@@ -393,7 +419,20 @@ def _has_stdin_data() -> bool:
         return select.select([sys.stdin], [], [], 0)[0] != []
 
 
+def _parse_platform_from_argv() -> str | None:
+    """Extract --platform value from sys.argv without triggering argparse.
+    Works even when stdin JSON is also being piped."""
+    for i, arg in enumerate(sys.argv):
+        if arg == "--platform" and i + 1 < len(sys.argv):
+            return sys.argv[i + 1]
+    return None
+
+
 def main() -> int:
+    # --platform may be passed via CLI even in stdin JSON mode.
+    # Hooks: python send.py --platform claude  (or codex)
+    platform_arg = _parse_platform_from_argv()
+
     # --- Mode 1: Stdin JSON (hooks: Claude Code, Codex CLI) ---
     if _has_stdin_data():
         try:
@@ -413,28 +452,24 @@ def main() -> int:
                         raise
                 state = _infer_state(payload)
                 if state and state in VALID_STATES:
-                    # Extract project name from cwd (last path component)
-                    cwd = str(payload.get("cwd", ""))
+                    # Extract project name from cwd (works for Claude + Codex formats)
+                    cwd = _get_hook_cwd(payload)
                     project = cwd.rstrip("/\\").rsplit("/", 1)[-1].rsplit("\\", 1)[-1] if cwd else None
                     # Subagent: append agent type so each subagent gets its own LED
-                    event = str(payload.get("hook_event_name", ""))
+                    event = _get_hook_event(payload)
                     if event in ("SubagentStart", "SubagentStop"):
-                        agent_type = str(payload.get("agent_type", "")).lower()
+                        agent_type = _get_hook_agent_type(payload)
                         if agent_type:
                             project = f"{project or 'subagent'}:{agent_type}"
                         elif not project:
                             project = None  # no identifying info → share main agent
-                    # Auto-detect platform from hook payload
-                    platform = None
-                    if "hook_event" in payload:
-                        # Codex CLI: top-level hook_event object with event_type
-                        platform = "codex"
-                    elif "hook_event_name" in payload:
-                        # Claude Code: hook_event_name string (always claude)
-                        platform = "claude"
-                    elif "event" in payload:
-                        # Legacy: bare "event" field → Codex
-                        platform = "codex"
+                    # Platform: CLI arg takes priority, fallback to auto-detect
+                    platform = platform_arg
+                    if not platform:
+                        if "model" in payload and "permission_mode" in payload:
+                            platform = "codex"
+                        elif "hook_event_name" in payload:
+                            platform = "claude"
                     if not _should_send_hook_state(state):
                         _log_write(f"{state} | DEDUP | event={payload.get('hook_event_name','?')} | project={project}")
                         return 0
@@ -469,7 +504,7 @@ def main() -> int:
     parser.add_argument("--list", action="store_true",
                         help="Scan and list all ESP32 LED devices on the network")
     parser.add_argument("--bind", metavar="DEVICE_ID",
-                        help="Bind to a specific device (e.g. --bind esp32-led-7604F1A8)")
+                        help="Bind to a specific device (e.g. --bind 3dai-led-7604F1A8)")
     parser.add_argument("--unbind", action="store_true",
                         help="Remove device binding, accept any device")
     parser.add_argument("--bind-ble", metavar="MAC_ADDRESS",

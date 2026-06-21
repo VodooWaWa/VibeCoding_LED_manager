@@ -1,0 +1,40 @@
+{
+  "hooks": {
+    "pre_user_prompt": [
+      {"command": "python \"<PROJECT_DIR>/transport/send.py\" thinking --platform windsurf", "show_output": false}
+    ],
+    "pre_read_code": [
+      {"command": "python \"<PROJECT_DIR>/transport/send.py\" thinking --platform windsurf", "show_output": false}
+    ],
+    "post_read_code": [
+      {"command": "python \"<PROJECT_DIR>/transport/send.py\" thinking --platform windsurf", "show_output": false}
+    ],
+    "pre_write_code": [
+      {"command": "python \"<PROJECT_DIR>/transport/send.py\" coding --platform windsurf", "show_output": false}
+    ],
+    "post_write_code": [
+      {"command": "python \"<PROJECT_DIR>/transport/send.py\" thinking --platform windsurf", "show_output": false}
+    ],
+    "pre_run_command": [
+      {"command": "python \"<PROJECT_DIR>/transport/send.py\" busy --platform windsurf", "show_output": false}
+    ],
+    "post_run_command": [
+      {"command": "python \"<PROJECT_DIR>/transport/send.py\" thinking --platform windsurf", "show_output": false}
+    ],
+    "pre_mcp_tool_use": [
+      {"command": "python \"<PROJECT_DIR>/transport/send.py\" busy --platform windsurf", "show_output": false}
+    ],
+    "post_mcp_tool_use": [
+      {"command": "python \"<PROJECT_DIR>/transport/send.py\" thinking --platform windsurf", "show_output": false}
+    ],
+    "post_cascade_response": [
+      {"command": "python \"<PROJECT_DIR>/transport/send.py\" success --platform windsurf", "show_output": false}
+    ],
+    "post_cascade_response_with_transcript": [
+      {"command": "python \"<PROJECT_DIR>/transport/send.py\" success --platform windsurf", "show_output": false}
+    ],
+    "post_setup_worktree": [
+      {"command": "python \"<PROJECT_DIR>/transport/send.py\" busy --platform windsurf", "show_output": false}
+    ]
+  }
+}

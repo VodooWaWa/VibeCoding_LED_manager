@@ -12,9 +12,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   scanDevices: () => ipcRenderer.invoke('scan-devices'),
   bindDevice: (deviceId) => ipcRenderer.invoke('bind-device', deviceId),
   unbindDevice: () => ipcRenderer.invoke('unbind-device'),
-  exportMcp: (outputDir) => ipcRenderer.invoke('export-mcp', outputDir),
-  exportSkill: (outputDir) => ipcRenderer.invoke('export-skill', outputDir),
+  exportPkg: (outputDir) => ipcRenderer.invoke('export-pkg', outputDir),
   selectDir: () => ipcRenderer.invoke('select-dir'),
   selectSaveDir: () => ipcRenderer.invoke('select-save-dir'),
   openExternal: (url) => ipcRenderer.invoke('open-external', url),
+  showItemInFolder: (path) => ipcRenderer.invoke('show-item-in-folder', path),
 });

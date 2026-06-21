@@ -20,7 +20,7 @@
     "extraResources": [
       { "from": "install.py", "to": "install.py" },
       { "from": "mcp.json", "to": "mcp.json" },
-      { "from": "transport", "to": "transport" },
+      { "from": "transport", "to": "transport", "filter": ["**/*", "!__pycache__"] },
       { "from": "skill", "to": "skill" },
       { "from": "hooks", "to": "hooks" },
       { "from": "plugin", "to": "plugin" }

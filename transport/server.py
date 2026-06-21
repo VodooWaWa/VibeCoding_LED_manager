@@ -23,7 +23,7 @@ from mcp.types import Tool, TextContent
 
 from transport.transport_wifi import send_state_wifi, VALID_STATES
 
-from transport.transport_ble import send_state_ble, load_ble_address
+from transport.transport_ble import send_state_ble_async, load_ble_address
 HAS_BLE = True  # always try — send_state_ble returns fast error if no address bound
 
 DEFAULT_WIFI_HOST = "auto"
@@ -83,14 +83,14 @@ def _try_wifi(state: str) -> Tuple[bool, str]:
     )
 
 
-def _try_ble(state: str) -> Tuple[bool, str]:
+async def _try_ble(state: str) -> Tuple[bool, str]:
     """Attempt to send *state* via BLE (direct connect, no scanning)."""
     if not load_ble_address():
         return False, "no BLE device bound"
-    return send_state_ble(state, DEFAULT_BLE_TIMEOUT)
+    return await send_state_ble_async(state, DEFAULT_BLE_TIMEOUT)
 
 
-def send_state(state: str, transport: str = "auto", project: str = None,
+async def send_state(state: str, transport: str = "auto", project: str = None,
                platform: str = None) -> Tuple[bool, str]:
     """Send a state command using the specified transport.
 
@@ -130,7 +130,7 @@ def send_state(state: str, transport: str = "auto", project: str = None,
         return ok, msg
 
     if transport == "ble":
-        ok, msg = _try_ble(cmd)
+        ok, msg = await _try_ble(cmd)
         if ok:
             _last_state = state
             _last_transport = "ble"
@@ -144,7 +144,7 @@ def send_state(state: str, transport: str = "auto", project: str = None,
         return ok, msg
 
     # WiFi failed — try BLE
-    ok_ble, msg_ble = _try_ble(cmd)
+    ok_ble, msg_ble = await _try_ble(cmd)
     if ok_ble:
         _last_state = state
         _last_transport = "ble"
@@ -168,7 +168,7 @@ LED_STATE_DESCRIPTIONS: Dict[str, str] = {
     "off":      "待机 — 全部熄灭",
 }
 
-server = Server("esp32-led-mcp")
+server = Server("3dai-led-mcp")
 
 
 @server.list_tools()
@@ -294,7 +294,7 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
         transport: str = arguments.get("transport", "auto")
         project: str = arguments.get("project")
         platform: str = arguments.get("platform")
-        ok, msg = send_state(state, transport, project, platform)
+        ok, msg = await send_state(state, transport, project, platform)
         return [TextContent(type="text", text=msg)]
 
     if name == "get_led_status":

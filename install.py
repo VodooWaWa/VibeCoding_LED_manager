@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ESP32 LED 一键安装器 — 支持 10+ 平台，自动检测环境"""
+"""3DAi LED 一键安装器 — 支持 10+ 平台，自动检测环境"""
 
 import sys
 import os
@@ -9,62 +9,64 @@ import json
 from pathlib import Path
 
 PROJECT_DIR = Path(__file__).resolve().parent
-GLOBAL_BIN = Path.home() / ".local" / "share" / "esp32-led"
+GLOBAL_BIN = Path.home() / ".local" / "share" / "3dai-led"
 SKILL_SRC = PROJECT_DIR / "skill" / "SKILL.md"          # hooks/plugin 平台
 SKILL_MCP_SRC = PROJECT_DIR / "skill" / "SKILL-mcp.md"  # MCP-only 平台
 TRANSPORT_DIR = PROJECT_DIR / "transport"
 
 # Platforms that have auto-trigger (hooks or plugin) — use SKILL.md
-AUTO_TRIGGER_PLATFORMS = {"claude", "codex", "opencode", "mimocode"}
+AUTO_TRIGGER_PLATFORMS = {"claude", "codex", "opencode", "mimocode", "windsurf"}
 
 # ── 平台定义 ───────────────────────────────────────────
 PLATFORMS = {
     "claude": {
-        "name": "Claude Code",
+        "name": "Claude Code", "dir": "claude",
         "has_hooks": True, "has_skill": True, "has_plugin": False, "has_mcp": True,
         "global_mcp": Path.home() / ".claude.json",
         "project_mcp": PROJECT_DIR / ".mcp.json",
     },
     "codex": {
-        "name": "Codex CLI",
+        "name": "Codex CLI", "dir": "codex",
         "has_hooks": True, "has_skill": True, "has_plugin": False, "has_mcp": True,
         "global_mcp": Path.home() / ".codex" / "config.toml",
         "project_mcp": PROJECT_DIR / ".codex" / "config.toml",
+        "config_format": "toml",
     },
     "cursor": {
-        "name": "Cursor",
+        "name": "Cursor", "dir": "cursor",
         "has_mcp": True,
         "global_mcp": Path.home() / ".cursor" / "mcp.json",
         "project_mcp": PROJECT_DIR / ".cursor" / "mcp.json",
     },
     "windsurf": {
-        "name": "Windsurf",
-        "has_mcp": True,
-        "global_mcp": Path.home() / ".windsurf" / "mcp.json",
-        "project_mcp": PROJECT_DIR / ".windsurf" / "mcp.json",
+        "name": "Windsurf", "dir": "windsurf",
+        "has_hooks": True, "has_mcp": True,
+        "global_mcp": Path.home() / ".codeium" / "windsurf" / "mcp_config.json",
+        # no project-level MCP - docs only mention global path
+        # hooks: ~/.codeium/windsurf/hooks.json (user) / .windsurf/hooks.json (workspace)
     },
     "trae": {
-        "name": "Trae",
+        "name": "Trae", "dir": "trae",
         "has_mcp": True,
         "global_mcp": Path.home() / ".trae" / "mcp.json",
         "project_mcp": PROJECT_DIR / ".trae" / "mcp.json",
     },
     "traecn": {
-        "name": "TraeCN",
+        "name": "TraeCN", "dir": "trae-cn",
         "has_mcp": True,
         "global_mcp": Path.home() / ".trae-cn" / "mcp.json",
         "project_mcp": PROJECT_DIR / ".trae-cn" / "mcp.json",
     },
     "opencode": {
-        "name": "OpenCode",
+        "name": "OpenCode", "dir": "opencode",
         "has_plugin": True, "has_mcp": True,
-        "global_plugin": Path.home() / ".config" / "opencode" / "plugins",
+        "global_plugin": Path.home() / ".opencode" / "plugins",
         "project_plugin": PROJECT_DIR / ".opencode" / "plugins",
-        "global_mcp": Path.home() / ".config" / "opencode" / "opencode.json",
-        "project_mcp": PROJECT_DIR / "opencode.json",
+        "global_mcp": Path.home() / ".opencode.json",
+        "project_mcp": PROJECT_DIR / ".opencode.json",
     },
     "mimocode": {
-        "name": "MiMoCode",
+        "name": "MiMoCode", "dir": "mimocode",
         "has_plugin": True, "has_mcp": True,
         "global_plugin": Path.home() / ".config" / "mimocode" / "plugins",
         "project_plugin": PROJECT_DIR / ".mimocode" / "plugins",
@@ -72,16 +74,10 @@ PLATFORMS = {
         "project_mcp": PROJECT_DIR / ".mimocode" / "mimocode.json",
     },
     "openclaw": {
-        "name": "OpenClaw",
+        "name": "OpenClaw", "dir": "openclaw",
         "has_mcp": True,
-        "global_mcp": Path.home() / ".openclaw" / "mcp.json",
-        "project_mcp": PROJECT_DIR / ".openclaw" / "mcp.json",
-    },
-    "hermes": {
-        "name": "Hermes Agent",
-        "has_mcp": True,
-        "global_mcp": Path.home() / ".hermes" / "mcp.json",
-        "project_mcp": PROJECT_DIR / ".hermes" / "mcp.json",
+        "global_mcp": Path.home() / ".openclaw" / "openclaw.json",
+        "project_mcp": PROJECT_DIR / ".openclaw" / "openclaw.json",
     },
 }
 
@@ -96,7 +92,7 @@ def check_python():
     v = sys.version_info
     return v.major == 3 and v.minor >= 9
 
-BIND_FILE = Path.home() / ".local" / "share" / "esp32-led" / ".esp32_device_id"
+BIND_FILE = Path.home() / ".local" / "share" / "3dai-led" / ".3dai_device_id"
 
 def load_binding():
     if BIND_FILE.exists():
@@ -148,7 +144,7 @@ def _files_identical(a: Path, b: Path) -> bool:
     except Exception:
         return False
 
-# ── MCP JSON 操作 ──────────────────────────────────────
+# ── MCP 配置读写 (JSON / TOML) ─────────────────────────────
 def load_json(path):
     if path.exists():
         with open(path, "r", encoding="utf-8") as f:
@@ -161,33 +157,73 @@ def save_json(path, data):
         json.dump(data, f, indent=2, ensure_ascii=False)
     print(f"  OK {path}")
 
+def _load_config(path, fmt="json"):
+    """Load config, dispatch by format."""
+    if not path.exists():
+        return {}
+    if fmt == "toml":
+        try:
+            import tomllib  # Python 3.11+
+        except ImportError:
+            import tomli as tomllib  # fallback
+        with open(path, "rb") as f:
+            return tomllib.load(f)
+    return load_json(path)
+
+def _save_config(path, data, fmt="json"):
+    """Save MCP config with format dispatch."""
+    if fmt == "toml":
+        path.parent.mkdir(parents=True, exist_ok=True)
+        lines = []
+        mcp = data.get("mcpServers", {})
+        for name, srv in mcp.items():
+            lines.append(f'[mcpServers."{name}"]')
+            cmd = srv["command"].replace('"', '\\"')
+            lines.append(f'command = "{cmd}"')
+            args = '", "'.join(a.replace('"', '\\"') for a in srv.get("args", []))
+            lines.append(f'args = ["{args_str}"]')
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("\n".join(lines) + "\n")
+        print(f"  OK {path} (toml)")
+        return
+    save_json(path, data)
+
+def _mcp_target(p, scope):
+    if scope == "project":
+        return p.get("project_mcp")
+    return p["global_mcp"]
+
 def install_mcp(platform_key, scope="global"):
     p = PLATFORMS[platform_key]
     if not p.get("has_mcp"): return
-    tgt = p["project_mcp"] if scope == "project" else p["global_mcp"]
+    tgt = _mcp_target(p, scope)
+    if not tgt: return  # no MCP target for this scope (e.g. Windsurf project)
+    fmt = p.get("config_format", "json")
     if scope == "project":
         expected_args = [str(PROJECT_DIR / "transport" / "server.py")]
     else:
         expected_args = [str(GLOBAL_BIN / "transport" / "server.py")]
     expected = {"command": sys.executable, "args": expected_args}
-    cfg = load_json(tgt)
+    cfg = _load_config(tgt, fmt)
     if "mcpServers" not in cfg: cfg["mcpServers"] = {}
-    existing = cfg["mcpServers"].get("esp32-led")
+    existing = cfg["mcpServers"].get("3dai-led")
     if existing and existing.get("command") == expected["command"] and existing.get("args") == expected["args"]:
         print(f"  MCP 已注册(无变化): {tgt}")
         return
-    cfg["mcpServers"]["esp32-led"] = expected
-    save_json(tgt, cfg)
+    cfg["mcpServers"]["3dai-led"] = expected
+    _save_config(tgt, cfg, fmt)
 
 def uninstall_mcp(platform_key, scope="global"):
     p = PLATFORMS[platform_key]
     if not p.get("has_mcp"): return
-    tgt = p["project_mcp"] if scope == "project" else p["global_mcp"]
-    cfg = load_json(tgt)
-    if "mcpServers" in cfg and "esp32-led" in cfg["mcpServers"]:
-        del cfg["mcpServers"]["esp32-led"]
+    tgt = _mcp_target(p, scope)
+    if not tgt: return  # no MCP target for this scope
+    fmt = p.get("config_format", "json")
+    cfg = _load_config(tgt, fmt)
+    if "mcpServers" in cfg and "3dai-led" in cfg["mcpServers"]:
+        del cfg["mcpServers"]["3dai-led"]
         if not cfg["mcpServers"]: del cfg["mcpServers"]
-        save_json(tgt, cfg)
+        _save_config(tgt, cfg, fmt)
     else:
         print(f"  MCP 未找到: {tgt}")
 
@@ -195,10 +231,10 @@ def uninstall_mcp(platform_key, scope="global"):
 def install_plugin(platform_key, scope="global"):
     p = PLATFORMS[platform_key]
     if not p.get("has_plugin"): return
-    src = PROJECT_DIR / "plugin" / "esp32-led.js"
+    src = PROJECT_DIR / "plugin" / "3dai-led.js"
     if not src.exists(): return
     pdir = p["project_plugin"] if scope == "project" else p["global_plugin"]
-    dst = pdir / "esp32-led.js"
+    dst = pdir / "3dai-led.js"
     if _files_identical(src, dst):
         print(f"  Plugin 已安装(无变化): {dst}")
         return
@@ -214,7 +250,7 @@ def uninstall_plugin(platform_key, scope="global"):
     p = PLATFORMS[platform_key]
     if not p.get("has_plugin"): return
     pdir = p["project_plugin"] if scope == "project" else p["global_plugin"]
-    dst = pdir / "esp32-led.js"
+    dst = pdir / "3dai-led.js"
     if dst.exists(): dst.unlink(); print(f"  REMOVED: {dst}")
 
 def _purge_sendpy_hooks(cfg_path):
@@ -321,6 +357,28 @@ def install_hooks(platform_key, scope="global"):
                 hooks[event] = list(entries)
         existing["hooks"] = hooks
         save_json(cfg_path, existing)
+    elif platform_key == "windsurf":
+        # Windsurf format: flat [{command, show_output}], state in command
+        tmpl = PROJECT_DIR / "hooks" / "windsurf_hooks.json"
+        if not tmpl.exists(): return
+        template = json.loads(tmpl.read_text(encoding="utf-8"))
+        if scope == "project":
+            cfg_path = PROJECT_DIR / ".windsurf" / "hooks.json"
+            send_py = str(PROJECT_DIR / "transport" / "send.py")
+        else:
+            cfg_path = Path.home() / ".codeium" / "windsurf" / "hooks.json"
+            send_py = str(GLOBAL_BIN / "transport" / "send.py")
+        existing = load_json(cfg_path)
+        hooks = existing.get("hooks", {})
+        for event, entries in template.get("hooks", {}).items():
+            for entry in entries:
+                entry["command"] = entry["command"].replace(
+                    "python \"<PROJECT_DIR>/transport/send.py\"",
+                    f'python "{send_py}"'
+                )
+            hooks[event] = entries  # Windsurf overwrites, not merges
+        existing["hooks"] = hooks
+        save_json(cfg_path, existing)
 
 def install_skill(scope="global", project_dir=None, platform_key=None):
     """Install skill file — auto-trigger platforms get SKILL.md, MCP-only get SKILL-mcp.md."""
@@ -331,22 +389,21 @@ def install_skill(scope="global", project_dir=None, platform_key=None):
 
     if scope == "global":
         targets = [
-            Path.home() / ".claude" / "skills" / "esp32-led",
-            Path.home() / ".agents" / "skills" / "esp32-led",
+            Path.home() / ".claude" / "skills" / "3dai-led",
+            Path.home() / ".agents" / "skills" / "3dai-led",
         ]
-    elif project_dir:
+    elif project_dir and platform_key:
         proj = Path(project_dir)
+        p = PLATFORMS[platform_key]
+        platform_dir = p.get("dir", platform_key)
         targets = [
-            proj / ".claude" / "skills" / "esp32-led",
-            proj / ".cursor" / "rules",
-            proj / ".windsurf" / "rules",
-            proj,
+            proj / f".{platform_dir}" / "skills" / "3dai-led",
         ]
     else:
         return
 
     for d in targets:
-        dst = d / "SKILL.md" if d.name != "rules" else d / "esp32-led-skill.md"
+        dst = d / "SKILL.md"
         if _files_identical(src, dst):
             print(f"  Skill 已安装(无变化): {dst}")
             continue
@@ -386,25 +443,24 @@ def do_install(platform_key, scope="global", project_dir=None):
     if p.get("has_mcp"): install_mcp(platform_key, scope)
 
 def uninstall_skill(scope="global", project_dir=None, platform_key=None):
-    """Remove skill files. Destination names match install_skill (always SKILL.md)."""
+    """Remove skill files. Destination names match install_skill."""
     if scope == "global":
         targets = [
-            Path.home() / ".claude" / "skills" / "esp32-led",
-            Path.home() / ".agents" / "skills" / "esp32-led",
+            Path.home() / ".claude" / "skills" / "3dai-led",
+            Path.home() / ".agents" / "skills" / "3dai-led",
         ]
-    elif project_dir:
+    elif project_dir and platform_key:
         proj = Path(project_dir)
+        p = PLATFORMS[platform_key]
+        platform_dir = p.get("dir", platform_key)
         targets = [
-            proj / ".claude" / "skills" / "esp32-led",
-            proj / ".cursor" / "rules",
-            proj / ".windsurf" / "rules",
-            proj,
+            proj / f".{platform_dir}" / "skills" / "3dai-led",
         ]
     else:
         return
 
     for d in targets:
-        dst = d / "SKILL.md" if d.name != "rules" else d / "esp32-led-skill.md"
+        dst = d / "SKILL.md"
         if dst.exists():
             dst.unlink()
             print(f"  REMOVED Skill: {dst}")
@@ -432,6 +488,17 @@ def uninstall_hooks(platform_key, scope="global"):
             print(f"  REMOVED {removed} hooks: {cfg_path}")
         else:
             print(f"  Hooks 未找到: {cfg_path}")
+    elif platform_key == "windsurf":
+        # Windsurf: hooks are standalone file, just remove it
+        if scope == "project":
+            cfg_path = PROJECT_DIR / ".windsurf" / "hooks.json"
+        else:
+            cfg_path = Path.home() / ".codeium" / "windsurf" / "hooks.json"
+        if cfg_path.exists():
+            cfg_path.unlink()
+            print(f"  REMOVED hooks: {cfg_path}")
+        else:
+            print(f"  Hooks 未找到: {cfg_path}")
 
 
 def do_uninstall(platform_key, scope="global", project_dir=None):
@@ -446,7 +513,7 @@ def do_uninstall(platform_key, scope="global", project_dir=None):
 def export_mcp_json(path=None):
     if not path:
         path = PROJECT_DIR / "mcp.json"
-    save_json(Path(path), {"mcpServers": {"esp32-led": dict(MCP_STDIO_CONFIG)}})
+    save_json(Path(path), {"mcpServers": {"3dai-led": dict(MCP_STDIO_CONFIG)}})
     print(f"\nmcp.json 已导出到: {path}")
     print("将此文件放到对应平台的配置目录即可。")
 
@@ -459,7 +526,7 @@ USAGE = """用法:
   python install.py unbind
   python install.py status
 
-平台: claude, codex, cursor, windsurf, trae, traecn, opencode, mimocode, openclaw, hermes
+平台: claude, codex, cursor, windsurf, trae, traecn, opencode, mimocode, openclaw
 默认: --target all --scope global"""
 
 def _parse_args(args):
@@ -494,16 +561,19 @@ def show_status():
             if tgt.exists():
                 try:
                     cfg = json.loads(tgt.read_text(encoding="utf-8"))
-                    if "esp32-led" in cfg.get("mcpServers", {}): installed = True
+                    if "3dai-led" in cfg.get("mcpServers", {}): installed = True
                 except: pass
         if p.get("has_plugin"):
             pdir = p.get("global_plugin")
-            if pdir and (pdir / "esp32-led.js").exists(): installed = True
+            if pdir and (pdir / "3dai-led.js").exists(): installed = True
         if p.get("has_hooks") and key == "claude":
             hooks = Path.home() / ".claude" / "settings.json"
             if hooks.exists() and "send.py" in hooks.read_text(encoding="utf-8", errors="ignore"): installed = True
         if p.get("has_hooks") and key == "codex":
             hooks = Path.home() / ".codex" / "hooks.json"
+            if hooks.exists() and "send.py" in hooks.read_text(encoding="utf-8", errors="ignore"): installed = True
+        if p.get("has_hooks") and key == "windsurf":
+            hooks = Path.home() / ".codeium" / "windsurf" / "hooks.json"
             if hooks.exists() and "send.py" in hooks.read_text(encoding="utf-8", errors="ignore"): installed = True
         print(f"  [{'已安装' if installed else '未安装'}] {key}: {p['name']}")
 

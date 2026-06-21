@@ -54,8 +54,8 @@ main {
 
 /* ── Left Panel ────────────────────────────────── */
 #left-panel {
-  width: 260px;
-  min-width: 260px;
+  width: 300px;
+  min-width: 300px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -145,6 +145,8 @@ main {
 .scan-device:hover { background: var(--bg-hover); }
 .scan-device .ip { color: var(--text-dim); font-size: 0.75rem; }
 .scan-device.bound { border: 1px solid var(--green); }
+.scan-device .btn-row { display: flex; gap: 4px; flex-shrink: 0; }
+.scan-device .btn-row .btn { padding: 3px 10px; font-size: 0.75rem; white-space: nowrap; }
 
 /* ── Settings ──────────────────────────────────── */
 .settings-row { display: flex; flex-direction: column; gap: 10px; }
