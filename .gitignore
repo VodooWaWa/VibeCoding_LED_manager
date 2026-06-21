@@ -4,3 +4,5 @@ __pycache__/
 *.pyc
 *.log
 .gstack/
+build.ps1
+build.sh
