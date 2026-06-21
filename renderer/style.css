@@ -271,7 +271,7 @@ footer {
 }
 .modal-overlay.show { display: flex; }
 .modal-content {
-  background: var(--surface); border-radius: 16px; padding: 28px;
+  background: var(--bg-card); border-radius: 16px; padding: 28px;
   text-align: center; max-width: 260px; width: 90%;
 }
 .modal-content h3 { margin: 12px 0 16px; font-size: 1.1em; }
@@ -282,5 +282,5 @@ footer {
   background: var(--accent);
 }
 .shop-links a:hover { opacity: 0.85; }
-.btn-close { background: transparent; border: 1px solid #555; color: var(--text-secondary); padding: 6px 20px; border-radius: 6px; cursor: pointer; }
+.btn-close { background: transparent; border: 1px solid #555; color: var(--text-dim); padding: 6px 20px; border-radius: 6px; cursor: pointer; }
 .btn-close:hover { border-color: var(--text); color: var(--text); }

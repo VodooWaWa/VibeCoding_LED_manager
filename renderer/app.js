@@ -424,7 +424,7 @@ async function installPlatform(key) {
   if (!confirm(t('confirmInstall', key, state.scope === 'project' ? t('projectLevel') : t('globalLevel')))) return;
 
   setBusy(true);
-  setStatus(t('installingStatus', key, state.scope));
+  setStatus(t('installingStatus', key, t(state.scope === 'global' ? 'globalLevel' : 'projectLevel')));
   try {
     const r = await window.electronAPI.installPlatform(key, state.scope, state.projectDir);
     if (r.success) {

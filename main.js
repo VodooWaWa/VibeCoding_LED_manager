@@ -4,12 +4,12 @@ const fs = require('fs');
 const path = require('path');
 
 // ── Paths ──────────────────────────────────────────────
-// In development: PROJECT_DIR = electron-ci/.. (project root)
+// In development: PROJECT_DIR = electron-manager directory itself
 // In packaged build: PROJECT_DIR = process.resourcesPath (extraResources root)
 const isPackaged = app.isPackaged;
 const PROJECT_DIR = isPackaged
   ? process.resourcesPath
-  : path.resolve(__dirname, '..');
+  : __dirname;
 const INSTALL_PY = path.join(PROJECT_DIR, 'install.py');
 const SKILL_MCP_SRC = path.join(PROJECT_DIR, 'skill', 'SKILL-mcp.md');
 const SKILL_SRC = path.join(PROJECT_DIR, 'skill', 'SKILL.md');
@@ -85,7 +85,7 @@ ipcMain.handle('check-env', async () => {
 
 ipcMain.handle('install-deps', async () => {
   const r = await runPython(['-m', 'pip', 'install', 'bleak', 'mcp'], { timeout: 120000 });
-  return { ok: r.code === 0, stdout: r.stdout, stderr: r.stderr };
+  return { success: r.success, output: r.stdout };
 });
 
 ipcMain.handle('get-status', async () => {
@@ -105,37 +105,84 @@ ipcMain.handle('get-status', async () => {
   return { platforms, deviceId, raw: r.stdout };
 });
 
-ipcMain.handle('install-platform', async (_e, platform, scope) => {
+ipcMain.handle('install-platform', async (_e, platform, scope, projectDir) => {
   const args = [INSTALL_PY, 'install', '--target', platform, '--scope', scope];
+  if (scope === 'project' && projectDir) args.push('--project-dir', projectDir);
   const r = await runPython(args, { timeout: 30000 });
-  return { success: r.success, stdout: r.stdout, stderr: r.stderr };
+  return { success: r.success, output: r.stdout };
 });
 
-ipcMain.handle('uninstall-platform', async (_e, platform, scope) => {
+ipcMain.handle('uninstall-platform', async (_e, platform, scope, projectDir) => {
   const args = [INSTALL_PY, 'uninstall', '--target', platform, '--scope', scope];
+  if (scope === 'project' && projectDir) args.push('--project-dir', projectDir);
   const r = await runPython(args, { timeout: 30000 });
-  return { success: r.success, stdout: r.stdout, stderr: r.stderr };
+  return { success: r.success, output: r.stdout };
 });
 
 ipcMain.handle('scan-devices', async () => {
   const r = await runPython([INSTALL_PY, 'scan']);
-  return r.stdout;
+  try { return JSON.parse(r.stdout); } catch (_) { return { devices: [] }; }
 });
 
 ipcMain.handle('bind-device', async (_e, deviceId) => {
   const r = await runPython([INSTALL_PY, 'bind', deviceId]);
-  return { ok: r.code === 0, stdout: r.stdout, stderr: r.stderr };
+  return { success: r.success, output: r.stdout };
 });
 
 ipcMain.handle('unbind-device', async () => {
   const r = await runPython([INSTALL_PY, 'unbind']);
-  return { ok: r.code === 0, stdout: r.stdout, stderr: r.stderr };
+  return { success: r.success, output: r.stdout };
 });
 
 ipcMain.handle('export-mcp', async (_e, outputPath) => {
   const args = outputPath ? [INSTALL_PY, 'export', outputPath] : [INSTALL_PY, 'export'];
   const r = await runPython(args);
-  return { ok: r.code === 0, stdout: r.stdout, stderr: r.stderr };
+  return { success: r.success, path: outputPath || path.join(PROJECT_DIR, 'mcp.json'), output: r.stdout };
+});
+
+ipcMain.handle('export-skill', async (_e, outputPath) => {
+  const skillPath = outputPath || PROJECT_DIR;
+  const src = path.join(PROJECT_DIR, 'skill', 'SKILL-mcp.md');
+  const dst = path.join(skillPath, 'SKILL.md');
+  try {
+    fs.copyFileSync(src, dst);
+    return { success: true, path: dst };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+ipcMain.handle('get-project-status', async (_e, projectDir) => {
+  const platforms = [];
+  if (!projectDir || !fs.existsSync(projectDir)) return { platforms };
+  for (const [key, def] of Object.entries(PLATFORM_DEFS)) {
+    let installed = false;
+    const mcpConfig = def.project_mcp;
+    if (mcpConfig) {
+      const mcpPath = path.join(projectDir, mcpConfig);
+      if (fs.existsSync(mcpPath)) {
+        try { const cfg = JSON.parse(fs.readFileSync(mcpPath, 'utf-8')); installed = !!cfg.mcpServers?.esp32-led; } catch (_) {}
+      }
+    }
+    if (def.plugin_file) {
+      const pluginPath = path.join(projectDir, def.plugin_file);
+      if (fs.existsSync(pluginPath)) installed = true;
+    }
+    platforms.push({ key, name: def.name, installed });
+  }
+  return { platforms };
+});
+
+ipcMain.handle('select-dir', async () => {
+  const { dialog } = require('electron');
+  const result = await dialog.showOpenDialog({ properties: ['openDirectory'] });
+  return result.canceled ? null : result.filePaths[0];
+});
+
+ipcMain.handle('select-save-dir', async () => {
+  const { dialog } = require('electron');
+  const result = await dialog.showOpenDialog({ properties: ['openDirectory', 'createDirectory'] });
+  return result.canceled ? null : result.filePaths[0];
 });
 
 ipcMain.handle('show-item-in-folder', async (_e, filePath) => {
