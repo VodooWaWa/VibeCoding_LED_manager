@@ -284,6 +284,15 @@ async def list_tools() -> list[Tool]:
                 "required": ["ip", "gateway", "netmask", "enabled"],
             },
         ),
+        Tool(
+            name="set_led_direction",
+            description="Flip LED left-right order. True = reversed (LED #1 = rightmost), False = normal (LED #1 = leftmost).",
+            inputSchema={
+                "type": "object",
+                "properties": {"reversed": {"type": "boolean", "description": "True for reversed LED order, false for normal"}},
+                "required": ["reversed"],
+            },
+        ),
     ]
 
 
@@ -364,6 +373,11 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
         en = 1 if arguments["enabled"] else 0
         ok, msg = _api_call(f"/static_ip?ip={ip}&gw={gw}&mask={mask}&en={en}")
         return [TextContent(type="text", text=f"Static IP configured, reboot device to apply" if ok else f"Failed: {msg}")]
+
+    if name == "set_led_direction":
+        rev = 1 if arguments["reversed"] else 0
+        ok, msg = _api_call(f"/led_reverse?r={rev}")
+        return [TextContent(type="text", text=f"LED direction {'reversed' if rev else 'normal'}" if ok else f"Failed: {msg}")]
 
     return [TextContent(type="text", text=f"Unknown tool: {name}")]
 
