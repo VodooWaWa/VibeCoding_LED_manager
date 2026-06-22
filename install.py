@@ -170,18 +170,43 @@ def _load_config(path, fmt="json"):
             return tomllib.load(f)
     return load_json(path)
 
+def _ensure_toml_feature(path, section, key, value):
+    """Ensure a TOML [section] key = value line exists."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    section_header = f"[{section}]"
+    entry = f"{key} = {value}"
+    if path.exists():
+        lines = path.read_text(encoding="utf-8").splitlines()
+        if entry in lines:
+            return  # already set
+        # Insert after section header, or append
+        try:
+            idx = lines.index(section_header)
+            lines.insert(idx + 1, entry)
+        except ValueError:
+            lines.append(section_header)
+            lines.append(entry)
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    else:
+        path.write_text(f"{section_header}\n{entry}\n", encoding="utf-8")
+
 def _save_config(path, data, fmt="json"):
     """Save MCP config with format dispatch."""
     if fmt == "toml":
         path.parent.mkdir(parents=True, exist_ok=True)
-        lines = []
+        # Preserve non-mcpServers sections from existing file
+        existing = []
+        if path.exists():
+            existing = path.read_text(encoding="utf-8").splitlines()
+        preserved = [l for l in existing if not l.startswith("[mcpServers.") and not l.startswith("command =") and not l.startswith("args =")]
+        lines = preserved
         mcp = data.get("mcpServers", {})
         for name, srv in mcp.items():
             lines.append(f'[mcpServers."{name}"]')
-            cmd = srv["command"].replace('"', '\\"')
-            lines.append(f'command = "{cmd}"')
-            args = '", "'.join(a.replace('"', '\\"') for a in srv.get("args", []))
-            lines.append(f'args = ["{args_str}"]')
+            # TOML literal strings (single quotes) - no backslash escaping needed
+            lines.append("command = '" + srv["command"] + "'")
+            args_str = "', '".join(srv.get("args", []))
+            lines.append("args = ['" + args_str + "']")
         with open(path, "w", encoding="utf-8") as f:
             f.write("\n".join(lines) + "\n")
         print(f"  OK {path} (toml)")
@@ -357,6 +382,12 @@ def install_hooks(platform_key, scope="global"):
                 hooks[event] = list(entries)
         existing["hooks"] = hooks
         save_json(cfg_path, existing)
+        # Enable hooks in config.toml (Codex requires [features] hooks = true)
+        if scope == "project":
+            toml_path = PROJECT_DIR / ".codex" / "config.toml"
+        else:
+            toml_path = Path.home() / ".codex" / "config.toml"
+        _ensure_toml_feature(toml_path, "features", "hooks", "true")
     elif platform_key == "windsurf":
         # Windsurf format: flat [{command, show_output}], state in command
         tmpl = PROJECT_DIR / "hooks" / "windsurf_hooks.json"
