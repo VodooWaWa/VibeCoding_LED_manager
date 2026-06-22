@@ -423,6 +423,10 @@ def install_skill(scope="global", project_dir=None, platform_key=None):
             Path.home() / ".claude" / "skills" / "3dai-led",
             Path.home() / ".agents" / "skills" / "3dai-led",
         ]
+        if platform_key == "trae":
+            targets.append(Path.home() / ".trae" / "builtin" / "global" / "skills" / "3dai-led")
+        elif platform_key == "traecn":
+            targets.append(Path.home() / ".trae-cn" / "builtin" / "global" / "skills" / "3dai-led")
     elif project_dir and platform_key:
         proj = Path(project_dir)
         p = PLATFORMS[platform_key]
@@ -430,6 +434,8 @@ def install_skill(scope="global", project_dir=None, platform_key=None):
         targets = [
             proj / f".{platform_dir}" / "skills" / "3dai-led",
         ]
+        if platform_key in ("trae", "traecn"):
+            targets.append(proj / f".{platform_dir}" / "builtin" / "trae" / "default" / "skills" / "3dai-led")
     else:
         return
 
@@ -480,6 +486,10 @@ def uninstall_skill(scope="global", project_dir=None, platform_key=None):
             Path.home() / ".claude" / "skills" / "3dai-led",
             Path.home() / ".agents" / "skills" / "3dai-led",
         ]
+        if platform_key == "trae":
+            targets.append(Path.home() / ".trae" / "builtin" / "global" / "skills" / "3dai-led")
+        elif platform_key == "traecn":
+            targets.append(Path.home() / ".trae-cn" / "builtin" / "global" / "skills" / "3dai-led")
     elif project_dir and platform_key:
         proj = Path(project_dir)
         p = PLATFORMS[platform_key]
@@ -487,6 +497,8 @@ def uninstall_skill(scope="global", project_dir=None, platform_key=None):
         targets = [
             proj / f".{platform_dir}" / "skills" / "3dai-led",
         ]
+        if platform_key in ("trae", "traecn"):
+            targets.append(proj / f".{platform_dir}" / "builtin" / "trae" / "default" / "skills" / "3dai-led")
     else:
         return
 

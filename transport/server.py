@@ -117,6 +117,8 @@ async def send_state(state: str, transport: str = "auto", project: str = None,
         cmd = f"{state} {project}"
         if platform:
             cmd = f"{cmd} platform:{platform}"
+    elif platform:
+        cmd = f"{state} platform:{platform}"
 
     transport = transport.lower()
     if transport not in ("auto", "wifi", "ble"):
