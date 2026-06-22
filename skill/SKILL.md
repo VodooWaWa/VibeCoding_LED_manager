@@ -1,3 +1,8 @@
+---
+name: 3dai-led
+description: Vibe Coding AI status LED indicator — WiFi/BLE control of WS2812 LED strip
+---
+
 # Vibe Coding AI 状态指示灯 (v3.4)
 
 AI 编码工具通过 WiFi / BLE 控制 ESP32 WS2812 灯带，8 种 RGB 动画实时反映工作状态。
