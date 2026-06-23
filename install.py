@@ -64,14 +64,16 @@ PLATFORMS = {
         "project_plugin": PROJECT_DIR / ".opencode" / "plugins",
         "global_mcp": Path.home() / ".opencode.json",
         "project_mcp": PROJECT_DIR / ".opencode.json",
+        "config_format": "mimocode",
     },
     "mimocode": {
         "name": "MiMoCode", "dir": "mimocode",
         "has_plugin": True, "has_mcp": True,
-        "global_plugin": Path.home() / ".config" / "mimocode" / "plugins",
+        "global_plugin": Path.home() / ".local" / "share" / "mimocode" / "plugins",
         "project_plugin": PROJECT_DIR / ".mimocode" / "plugins",
         "global_mcp": Path.home() / ".config" / "mimocode" / "mimocode.json",
         "project_mcp": PROJECT_DIR / ".mimocode" / "mimocode.json",
+        "config_format": "mimocode",
     },
     "openclaw": {
         "name": "OpenClaw", "dir": "openclaw",
@@ -161,6 +163,11 @@ def _load_config(path, fmt="json"):
     """Load config, dispatch by format."""
     if not path.exists():
         return {}
+    if fmt == "mimocode":
+        cfg = load_json(path)
+        # MiMoCode uses "mcp" key, normalize to "mcpServers" for internal use
+        mcp = cfg.get("mcp", {})
+        return {"mcpServers": mcp, "_rest": {k: v for k, v in cfg.items() if k != "mcp"}}
     if fmt == "toml":
         try:
             import tomllib  # Python 3.11+
@@ -192,6 +199,20 @@ def _ensure_toml_feature(path, section, key, value):
 
 def _save_config(path, data, fmt="json"):
     """Save MCP config with format dispatch."""
+    if fmt == "mimocode":
+        path.parent.mkdir(parents=True, exist_ok=True)
+        # MiMoCode uses "mcp" key with type+command array format
+        cfg = load_json(path) if path.exists() else {}
+        # Preserve non-mcp keys from existing config
+        rest = {k: v for k, v in cfg.items() if k != "mcp"}
+        mcp = {}
+        for name, srv in data.get("mcpServers", {}).items():
+            mcp[name] = {"type": "local", "command": [srv["command"]] + srv.get("args", [])}
+        rest["$schema"] = "https://opencode.ai/config.json"
+        if mcp:
+            rest["mcp"] = mcp
+        save_json(path, rest)
+        return
     if fmt == "toml":
         path.parent.mkdir(parents=True, exist_ok=True)
         # Preserve non-mcpServers sections from existing file
@@ -216,7 +237,7 @@ def _save_config(path, data, fmt="json"):
 def _mcp_target(p, scope):
     if scope == "project":
         return p.get("project_mcp")
-    return p["global_mcp"]
+    return p.get("global_mcp")
 
 def install_mcp(platform_key, scope="global"):
     p = PLATFORMS[platform_key]
@@ -237,6 +258,10 @@ def install_mcp(platform_key, scope="global"):
         return
     cfg["mcpServers"]["3dai-led"] = expected
     _save_config(tgt, cfg, fmt)
+    # MiMoCode: also write to ~/.mimocode.json (OpenCode-compatible path)
+    if platform_key == "mimocode" and scope == "global":
+        alt = Path.home() / ".mimocode.json"
+        _save_config(alt, cfg, fmt)
 
 def uninstall_mcp(platform_key, scope="global"):
     p = PLATFORMS[platform_key]
@@ -427,6 +452,8 @@ def install_skill(scope="global", project_dir=None, platform_key=None):
             targets.append(Path.home() / ".trae" / "builtin" / "global" / "skills" / "3dai-led")
         elif platform_key == "traecn":
             targets.append(Path.home() / ".trae-cn" / "builtin" / "global" / "skills" / "3dai-led")
+        elif platform_key == "mimocode":
+            targets.append(Path.home() / ".local" / "share" / "mimocode" / "skills" / "3dai-led")
     elif project_dir and platform_key:
         proj = Path(project_dir)
         p = PLATFORMS[platform_key]
@@ -490,6 +517,8 @@ def uninstall_skill(scope="global", project_dir=None, platform_key=None):
             targets.append(Path.home() / ".trae" / "builtin" / "global" / "skills" / "3dai-led")
         elif platform_key == "traecn":
             targets.append(Path.home() / ".trae-cn" / "builtin" / "global" / "skills" / "3dai-led")
+        elif platform_key == "mimocode":
+            targets.append(Path.home() / ".local" / "share" / "mimocode" / "skills" / "3dai-led")
     elif project_dir and platform_key:
         proj = Path(project_dir)
         p = PLATFORMS[platform_key]
