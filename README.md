@@ -5,6 +5,8 @@ AI 编程状态指示灯 — 一键安装管理器。单文件运行，支持 9 
 > ## Ai3D趣造
 >
 > 硬件购买：[淘宝](https://shop106055843.taobao.com/category.htm?spm=pc_detail.30350276.shop_block.dshopinfo.3e907dd6X0ddB7) | [拼多多](https://mobile.yangkeduo.com/mall_page.html?ps=kSxgffPoX9)
+>
+> 如果您有使用方面的任何疑问，请阅读[用户使用说明](用户使用说明.pdf)
 
 ## 下载
 
