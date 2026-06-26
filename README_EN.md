@@ -42,7 +42,7 @@ Get the latest from [Releases](https://github.com/VodooWaWa/VibeCoding_LED_manag
 - **Device management**: LAN scan, WiFi/BLE bind/unbind, clear BLE bonds.
 - **9 platforms**: Claude Code / Codex CLI / OpenCode / MiMoCode / Cursor / Windsurf / Trae / TraeCN / OpenClaw
 - **Global / Project scope**: Global = all projects. Project = per-repo config.
-- **Environment check**: Python 3.9+, bleak, mcp auto-detection.
+- **Environment check**: Python 3.12+, bleak, mcp auto-detection.
 - **MCP+Skill export**: Bundle config files for manual platform setup.
 - **Bilingual UI**: Chinese / English.
 
@@ -66,7 +66,7 @@ Both modes coexist.
 ## Requirements
 
 - Windows 10/11 / macOS / Linux
-- Python 3.9+
+- Python 3.12+
 - WiFi 2.4GHz LAN
 
 ## Security
