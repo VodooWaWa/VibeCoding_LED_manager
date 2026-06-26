@@ -1,12 +1,6 @@
 name: Build & Release
 
 on:
-  push:
-    branches: [master, main]
-    paths-ignore:
-      - 'README.md'
-      - '.gitignore'
-      - '**.md'
   workflow_dispatch:
 
 permissions:
