@@ -1,5 +1,7 @@
 # Vibe Coding LED Manager
 
+[English](README_EN.md)
+
 AI 编程状态指示灯 — 一键安装管理器。单文件运行，支持 9 个 AI 平台自动配置。
 
 > ## Ai3D趣造
