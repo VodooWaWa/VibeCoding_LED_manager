@@ -7,6 +7,16 @@ AI 编程状态指示灯 — 一键安装管理器。单文件运行，支持 9 
 > 硬件购买：[淘宝](https://shop106055843.taobao.com/category.htm?spm=pc_detail.30350276.shop_block.dshopinfo.3e907dd6X0ddB7) | [拼多多](https://mobile.yangkeduo.com/mall_page.html?ps=kSxgffPoX9)
 >
 > 如果您有使用方面的任何疑问，请阅读[用户使用说明](用户使用说明.pdf)
+>
+## 当前设备固件最新版本号：v3.5(可以访问设备WebUI查看)
+- v3.5更新日志：
+- 更新了反向灯序开关功能
+- 优化了wifi-AP配网和配网回退逻辑，固定信道6保证信号稳定。
+- 修复BLE发现BUG，广播开关形同虚设
+- 修复静态IP设置BUG，早期版本存在静态IP设置失效问题。
+- 优化页面发送机制，解决 chunked 非阻塞偶发 EAGAIN 截断导致页面无法加载的问题
+
+因为设备无法直接进行OTA，如果需要升级最新版固件，可以联系客服远程协助进行操作。（Windows环境+连连控远程控制软件）
 
 ## 下载
 
