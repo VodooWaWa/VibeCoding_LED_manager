@@ -7,6 +7,8 @@ AI 编程状态指示灯 — 一键安装管理器。单文件运行，支持 9 
 > 硬件购买：[淘宝](https://shop106055843.taobao.com/category.htm?spm=pc_detail.30350276.shop_block.dshopinfo.3e907dd6X0ddB7) | [拼多多](https://mobile.yangkeduo.com/mall_page.html?ps=kSxgffPoX9)
 >
 > 产品使用说明：[用户使用说明](用户使用说明.pdf)
+>
+> 当前固件最新版本v3.5(可以在设备WebUI查阅)，如果您的设备低于这个版本号，建议联系客服远程协助进行更新。（Windows操作系统+连连控远程协助）
 
 ## 下载
 
