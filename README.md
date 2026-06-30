@@ -35,6 +35,14 @@ AI 编程状态指示灯 — 一键安装管理器。单文件运行，支持 9 
 > macOS 首次打开若提示"无法验证开发者"，系统设置 → 隐私与安全性 → 仍要打开。
 > Linux AppImage 需先 `chmod +x`。
 
+## 安装管理器UI预览
+![WebUI](/Priview-IMG/ManagerUI.png "管理器UI界面")
+
+## 设备UI预览
+![WebUI](/Priview-IMG/WebUI-1.png "WebUI主界面")
+![WebUI](/Priview-IMG/WebUI-2.png "WebUI灯光测试")
+![WebUI](/Priview-IMG/WebUI-3.png "WebUI项目看板")
+
 ## 功能
 
 - **一键安装**：选平台 → 点安装，自动完成环境检测、依赖安装、配置写入
