@@ -2,7 +2,7 @@
 
 [English](README_EN.md)
 
-AI 编程状态指示灯 — 一键安装管理器。单文件运行，支持 9 个 AI 平台自动配置。
+AI 编程状态指示灯 — 一键安装管理器。单文件运行，支持 10 个 AI 平台自动配置。
 
 > ## Ai3D趣造
 >
@@ -48,7 +48,7 @@ AI 编程状态指示灯 — 一键安装管理器。单文件运行，支持 9 
 - **一键安装**：选平台 → 点安装，自动完成环境检测、依赖安装、配置写入
 - **一键卸载**：随时移除，不留残留
 - **设备管理**：扫描局域网设备、WiFi/BLE 绑定解绑、清除蓝牙配对
-- **平台支持**：Claude Code / Codex CLI / OpenCode / MiMoCode / Cursor / Windsurf / Trae / TraeCN / OpenClaw
+- **平台支持**：Claude Code / Codex CLI / OpenCode / MiMoCode / Cursor / Windsurf / Trae / TraeCN / OpenClaw / Reasonix
 - **全局 / 项目级**：全局所有项目通用，项目级跟着目录走
 - **环境检测**：自动检测 Python、bleak、mcp 依赖
 - **MCP+Skill 导出**：打包为完整配置文件包，用于列表外平台手动接入

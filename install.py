@@ -3,6 +3,7 @@
 
 import sys
 import os
+import re
 import shutil
 import subprocess
 import json
@@ -15,7 +16,7 @@ SKILL_MCP_SRC = PROJECT_DIR / "skill" / "SKILL-mcp.md"  # MCP-only 平台
 TRANSPORT_DIR = PROJECT_DIR / "transport"
 
 # Platforms that have auto-trigger (hooks or plugin) — use SKILL.md
-AUTO_TRIGGER_PLATFORMS = {"claude", "codex", "opencode", "mimocode", "windsurf"}
+AUTO_TRIGGER_PLATFORMS = {"claude", "codex", "opencode", "mimocode", "windsurf", "reasonix"}
 
 # ── 平台定义 ───────────────────────────────────────────
 PLATFORMS = {
@@ -80,6 +81,11 @@ PLATFORMS = {
         "has_mcp": True,
         "global_mcp": Path.home() / ".openclaw" / "openclaw.json",
         "project_mcp": PROJECT_DIR / ".openclaw" / "openclaw.json",
+    },
+    "reasonix": {
+        "name": "Reasonix", "dir": "reasonix",
+        "has_hooks": True, "has_skill": True, "has_plugin": False, "has_mcp": True,
+        "project_mcp": PROJECT_DIR / ".mcp.json",
     },
 }
 
@@ -234,6 +240,68 @@ def _save_config(path, data, fmt="json"):
         return
     save_json(path, data)
 
+def _reasonix_config_dir():
+    """Return Reasonix global config directory (platform-aware)."""
+    if sys.platform == "win32":
+        return Path(os.environ.get("APPDATA", Path.home() / "AppData" / "Roaming")) / "reasonix"
+    return Path.home() / ".reasonix"
+
+
+def _ensure_reasonix_toml_plugin(config_path, name, command, args):
+    """Add a [[plugins]] entry to Reasonix config.toml if not present."""
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    if config_path.exists():
+        content = config_path.read_text(encoding="utf-8")
+        if f"name = '{name}'" in content or f'name = "{name}"' in content:
+            return  # already configured
+        # Also check with variable spacing (e.g. Reasonix-generated: name    = "3dai-led")
+        if re.search(rf"name\s*=\s*['\"].*\b{re.escape(name)}\b.*['\"]", content):
+            return
+        # Append to existing config
+        text = content.rstrip("\n") + "\n\n"
+    else:
+        text = ""
+    args_str = "', '".join(args)
+    # Use TOML literal strings (single quotes) — no backslash escaping needed
+    text += f'[[plugins]]\nname = \'{name}\'\ncommand = \'{command}\'\nargs = [\'{args_str}\']\n'
+    config_path.write_text(text, encoding="utf-8")
+    print(f"  OK [[plugins]]: {config_path}")
+
+
+def _remove_reasonix_toml_plugin(config_path, name):
+    """Remove a [[plugins]] entry from Reasonix config.toml."""
+    if not config_path.exists():
+        return False
+    lines = config_path.read_text(encoding="utf-8").splitlines()
+    new_lines = []
+    skip = False
+    removed = False
+    for line in lines:
+        if line.strip() == "[[plugins]]":
+            skip = False  # previous plugin block ended
+            # Peek ahead to see if this block is ours
+            # We'll handle below
+        # Handle variable spacing: name=name / name = 'name' / name    = "name"
+        stripped = line.strip()
+        if re.match(rf"name\s*=\s*['\"].*\b{re.escape(name)}\b.*['\"]", stripped):
+            skip = True
+            removed = True
+            # Also skip the [[plugins]] header before this
+            if new_lines and new_lines[-1].strip() == "[[plugins]]":
+                new_lines.pop()
+            continue
+        if skip:
+            # Skip lines until next [[plugins]] or end
+            if line.strip().startswith("[["):
+                skip = False
+                new_lines.append(line)
+            continue
+        new_lines.append(line)
+    if removed:
+        config_path.write_text("\n".join(new_lines).strip() + "\n", encoding="utf-8")
+    return removed
+
+
 def _mcp_target(p, scope):
     if scope == "project":
         return p.get("project_mcp")
@@ -242,6 +310,27 @@ def _mcp_target(p, scope):
 def install_mcp(platform_key, scope="global"):
     p = PLATFORMS[platform_key]
     if not p.get("has_mcp"): return
+
+    # ── Reasonix: project → .mcp.json, global → [[plugins]] in config.toml ──
+    if platform_key == "reasonix":
+        if scope == "project":
+            tgt = PROJECT_DIR / ".mcp.json"
+            expected_args = [str(PROJECT_DIR / "transport" / "server.py")]
+            expected = {"command": sys.executable, "args": expected_args}
+            cfg = load_json(tgt)
+            if "mcpServers" not in cfg: cfg["mcpServers"] = {}
+            existing = cfg["mcpServers"].get("3dai-led")
+            if existing and existing.get("command") == expected["command"] and existing.get("args") == expected["args"]:
+                print(f"  MCP 已注册(无变化): {tgt}")
+                return
+            cfg["mcpServers"]["3dai-led"] = expected
+            save_json(tgt, cfg)
+        else:
+            tgt = _reasonix_config_dir() / "config.toml"
+            expected_args = [str(GLOBAL_BIN / "transport" / "server.py")]
+            _ensure_reasonix_toml_plugin(tgt, "3dai-led", sys.executable, expected_args)
+        return
+
     tgt = _mcp_target(p, scope)
     if not tgt: return  # no MCP target for this scope (e.g. Windsurf project)
     fmt = p.get("config_format", "json")
@@ -266,6 +355,26 @@ def install_mcp(platform_key, scope="global"):
 def uninstall_mcp(platform_key, scope="global"):
     p = PLATFORMS[platform_key]
     if not p.get("has_mcp"): return
+
+    # ── Reasonix ──
+    if platform_key == "reasonix":
+        if scope == "project":
+            tgt = PROJECT_DIR / ".mcp.json"
+            cfg = load_json(tgt)
+            if "mcpServers" in cfg and "3dai-led" in cfg["mcpServers"]:
+                del cfg["mcpServers"]["3dai-led"]
+                if not cfg["mcpServers"]: del cfg["mcpServers"]
+                save_json(tgt, cfg)
+            else:
+                print(f"  MCP 未找到: {tgt}")
+        else:
+            tgt = _reasonix_config_dir() / "config.toml"
+            if _remove_reasonix_toml_plugin(tgt, "3dai-led"):
+                print(f"  REMOVED [[plugins]]: {tgt}")
+            else:
+                print(f"  MCP 未找到: {tgt}")
+        return
+
     tgt = _mcp_target(p, scope)
     if not tgt: return  # no MCP target for this scope
     fmt = p.get("config_format", "json")
@@ -435,6 +544,34 @@ def install_hooks(platform_key, scope="global"):
             hooks[event] = entries  # Windsurf overwrites, not merges
         existing["hooks"] = hooks
         save_json(cfg_path, existing)
+    elif platform_key == "reasonix":
+        # Reasonix uses flat hooks format in .reasonix/settings.json
+        tmpl = PROJECT_DIR / ".reasonix" / "settings.json"
+        if not tmpl.exists(): return
+        template = json.loads(tmpl.read_text(encoding="utf-8"))
+        if scope == "project":
+            cfg_path = PROJECT_DIR / ".reasonix" / "settings.json"
+            # Already in place — verify and report
+            existing = load_json(cfg_path)
+            if existing.get("hooks") == template.get("hooks"):
+                print(f"  Hooks 已安装(无变化): {cfg_path}")
+                return
+            save_json(cfg_path, template)
+        else:
+            cfg_path = Path.home() / ".reasonix" / "settings.json"
+            send_py = str(GLOBAL_BIN / "transport" / "send.py")
+            import copy
+            hooks = copy.deepcopy(template)
+            for event, entries in hooks.get("hooks", {}).items():
+                for entry in entries:
+                    cmd = entry.get("command", "")
+                    # Replace relative path with absolute global path
+                    entry["command"] = cmd.replace(
+                        "python transport/send.py", f"python {send_py}"
+                    )
+            existing = load_json(cfg_path)
+            existing["hooks"] = hooks.get("hooks", {})
+            save_json(cfg_path, existing)
 
 def install_skill(scope="global", project_dir=None, platform_key=None):
     """Install skill file — auto-trigger platforms get SKILL.md, MCP-only get SKILL-mcp.md."""
@@ -454,6 +591,8 @@ def install_skill(scope="global", project_dir=None, platform_key=None):
             targets.append(Path.home() / ".trae-cn" / "builtin" / "global" / "skills" / "3dai-led")
         elif platform_key == "mimocode":
             targets.append(Path.home() / ".local" / "share" / "mimocode" / "skills" / "3dai-led")
+        elif platform_key == "reasonix":
+            targets.append(Path.home() / ".reasonix" / "skills" / "3dai-led")
     elif project_dir and platform_key:
         proj = Path(project_dir)
         p = PLATFORMS[platform_key]
@@ -463,6 +602,8 @@ def install_skill(scope="global", project_dir=None, platform_key=None):
         ]
         if platform_key in ("trae", "traecn"):
             targets.append(proj / f".{platform_dir}" / "builtin" / "trae" / "default" / "skills" / "3dai-led")
+        elif platform_key == "reasonix":
+            targets.append(proj / ".reasonix" / "skills" / "3dai-led")
     else:
         return
 
@@ -519,6 +660,8 @@ def uninstall_skill(scope="global", project_dir=None, platform_key=None):
             targets.append(Path.home() / ".trae-cn" / "builtin" / "global" / "skills" / "3dai-led")
         elif platform_key == "mimocode":
             targets.append(Path.home() / ".local" / "share" / "mimocode" / "skills" / "3dai-led")
+        elif platform_key == "reasonix":
+            targets.append(Path.home() / ".reasonix" / "skills" / "3dai-led")
     elif project_dir and platform_key:
         proj = Path(project_dir)
         p = PLATFORMS[platform_key]
@@ -528,6 +671,8 @@ def uninstall_skill(scope="global", project_dir=None, platform_key=None):
         ]
         if platform_key in ("trae", "traecn"):
             targets.append(proj / f".{platform_dir}" / "builtin" / "trae" / "default" / "skills" / "3dai-led")
+        elif platform_key == "reasonix":
+            targets.append(proj / ".reasonix" / "skills" / "3dai-led")
     else:
         return
 
@@ -571,6 +716,31 @@ def uninstall_hooks(platform_key, scope="global"):
             print(f"  REMOVED hooks: {cfg_path}")
         else:
             print(f"  Hooks 未找到: {cfg_path}")
+    elif platform_key == "reasonix":
+        # Reasonix uses flat hooks format — remove entries containing send.py
+        if scope == "project":
+            cfg_path = PROJECT_DIR / ".reasonix" / "settings.json"
+        else:
+            cfg_path = Path.home() / ".reasonix" / "settings.json"
+        if not cfg_path.exists():
+            print(f"  Hooks 未找到: {cfg_path}")
+            return
+        cfg = load_json(cfg_path)
+        hooks = cfg.get("hooks", {})
+        removed = 0
+        for event in list(hooks.keys()):
+            cleaned = [e for e in hooks[event] if "send.py" not in e.get("command", "")]
+            removed += len(hooks[event]) - len(cleaned)
+            if cleaned:
+                hooks[event] = cleaned
+            else:
+                del hooks[event]
+        if removed:
+            cfg["hooks"] = hooks
+            save_json(cfg_path, cfg)
+            print(f"  REMOVED {removed} hooks: {cfg_path}")
+        else:
+            print(f"  Hooks 未找到: {cfg_path}")
 
 
 def do_uninstall(platform_key, scope="global", project_dir=None):
@@ -598,7 +768,7 @@ USAGE = """用法:
   python install.py unbind
   python install.py status
 
-平台: claude, codex, cursor, windsurf, trae, traecn, opencode, mimocode, openclaw
+平台: claude, codex, cursor, windsurf, trae, traecn, opencode, mimocode, openclaw, reasonix
 默认: --target all --scope global"""
 
 def _parse_args(args):
@@ -629,8 +799,8 @@ def show_status():
     for key, p in PLATFORMS.items():
         installed = False
         if p.get("has_mcp"):
-            tgt = p["global_mcp"]
-            if tgt.exists():
+            tgt = p.get("global_mcp")
+            if tgt and tgt.exists():
                 try:
                     cfg = json.loads(tgt.read_text(encoding="utf-8"))
                     if "3dai-led" in cfg.get("mcpServers", {}): installed = True
@@ -646,6 +816,9 @@ def show_status():
             if hooks.exists() and "send.py" in hooks.read_text(encoding="utf-8", errors="ignore"): installed = True
         if p.get("has_hooks") and key == "windsurf":
             hooks = Path.home() / ".codeium" / "windsurf" / "hooks.json"
+            if hooks.exists() and "send.py" in hooks.read_text(encoding="utf-8", errors="ignore"): installed = True
+        if p.get("has_hooks") and key == "reasonix":
+            hooks = Path.home() / ".reasonix" / "settings.json"
             if hooks.exists() and "send.py" in hooks.read_text(encoding="utf-8", errors="ignore"): installed = True
         print(f"  [{'已安装' if installed else '未安装'}] {key}: {p['name']}")
 

@@ -2,7 +2,7 @@
 
 [中文](README.md)
 
-One-click installer for AI status LED indicator. Single-file executable, supports 9 AI platforms.
+One-click installer for AI status LED indicator. Single-file executable, supports 10 AI platforms.
 
 > ## Ai3D趣造 Hardware
 >
@@ -40,7 +40,7 @@ Get the latest from [Releases](https://github.com/VodooWaWa/VibeCoding_LED_manag
 - **One-click install**: Pick platform → Install. Auto-detects Python/bleak/mcp.
 - **One-click uninstall**: Clean removal, no leftovers.
 - **Device management**: LAN scan, WiFi/BLE bind/unbind, clear BLE bonds.
-- **9 platforms**: Claude Code / Codex CLI / OpenCode / MiMoCode / Cursor / Windsurf / Trae / TraeCN / OpenClaw
+- **10 platforms**: Claude Code / Codex CLI / OpenCode / MiMoCode / Cursor / Windsurf / Trae / TraeCN / OpenClaw / Reasonix
 - **Global / Project scope**: Global = all projects. Project = per-repo config.
 - **Environment check**: Python 3.12+, bleak, mcp auto-detection.
 - **MCP+Skill export**: Bundle config files for manual platform setup.

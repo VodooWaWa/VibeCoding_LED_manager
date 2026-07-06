@@ -23,7 +23,8 @@
       { "from": "transport", "to": "transport", "filter": ["**/*", "!__pycache__"] },
       { "from": "skill", "to": "skill" },
       { "from": "hooks", "to": "hooks" },
-      { "from": "plugin", "to": "plugin" }
+      { "from": "plugin", "to": "plugin" },
+      { "from": ".reasonix", "to": ".reasonix" }
     ],
     "win": {
       "target": "portable",
