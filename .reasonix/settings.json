@@ -1,36 +1,36 @@
 {
   "hooks": {
     "SessionStart": [
-      { "command": "python transport/send.py off --platform reasonix", "timeout": 5000, "description": "Session started — turn off LED" }
+      { "command": "python transport/send.py off --platform reasonix || true", "timeout": 5000, "description": "Session started — turn off LED" }
     ],
     "UserPromptSubmit": [
-      { "command": "python transport/send.py thinking --platform reasonix", "timeout": 5000, "description": "User submitted prompt — thinking" }
+      { "command": "python transport/send.py thinking --platform reasonix || true", "timeout": 5000, "description": "User submitted prompt — thinking" }
     ],
     "PreToolUse": [
-      { "match": "(edit_file|write_file|multi_edit|delete_range|delete_symbol|move_file|notebook_edit|read_file|glob|grep)", "command": "python transport/send.py coding --platform reasonix", "timeout": 5000, "description": "Editing/reading files — coding" },
-      { "match": "(bash|run_shell)", "command": "python transport/send.py busy --platform reasonix", "timeout": 5000, "description": "Shell command — busy" },
-      { "match": ".*", "command": "python transport/send.py busy --platform reasonix", "timeout": 5000, "description": "Any tool — busy" }
+      { "match": "(edit_file|write_file|multi_edit|delete_range|delete_symbol|move_file|notebook_edit|read_file|glob|grep)", "command": "python transport/send.py coding --platform reasonix || true", "timeout": 5000, "description": "Editing/reading files — coding" },
+      { "match": "(bash|run_shell)", "command": "python transport/send.py busy --platform reasonix || true", "timeout": 5000, "description": "Shell command — busy" },
+      { "match": ".*", "command": "python transport/send.py busy --platform reasonix || true", "timeout": 5000, "description": "Any tool — busy" }
     ],
     "PostToolUse": [
-      { "match": ".*", "command": "python transport/send.py thinking --platform reasonix", "timeout": 5000, "description": "Tool complete — back to thinking" }
+      { "match": ".*", "command": "python transport/send.py thinking --platform reasonix || true", "timeout": 5000, "description": "Tool complete — back to thinking" }
     ],
     "PermissionRequest": [
-      { "command": "python transport/send.py waiting --platform reasonix", "timeout": 5000, "description": "Waiting for user permission" }
+      { "command": "python transport/send.py waiting --platform reasonix || true", "timeout": 5000, "description": "Waiting for user permission" }
     ],
     "PostLLMCall": [
-      { "command": "python transport/send.py thinking --platform reasonix", "timeout": 5000, "description": "LLM response received — thinking" }
+      { "command": "python transport/send.py thinking --platform reasonix || true", "timeout": 5000, "description": "LLM response received — thinking" }
     ],
     "Stop": [
-      { "command": "python transport/send.py success --platform reasonix", "timeout": 5000, "description": "Turn completed — success" }
+      { "command": "python transport/send.py success --platform reasonix || true", "timeout": 5000, "description": "Turn completed — success" }
     ],
     "SubagentStop": [
-      { "command": "python transport/send.py off --platform reasonix", "timeout": 5000, "description": "Subagent stopped — off" }
+      { "command": "python transport/send.py off --platform reasonix || true", "timeout": 5000, "description": "Subagent stopped — off" }
     ],
     "PreCompact": [
-      { "command": "python transport/send.py busy --platform reasonix", "timeout": 5000, "description": "Memory compaction — busy" }
+      { "command": "python transport/send.py busy --platform reasonix || true", "timeout": 5000, "description": "Memory compaction — busy" }
     ],
     "SessionEnd": [
-      { "command": "python transport/send.py off --platform reasonix", "timeout": 5000, "description": "Session ended — off" }
+      { "command": "python transport/send.py off --platform reasonix || true", "timeout": 5000, "description": "Session ended — off" }
     ]
   }
 }
