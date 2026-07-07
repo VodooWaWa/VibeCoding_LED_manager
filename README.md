@@ -32,7 +32,10 @@ AI 编程状态指示灯 — 一键安装管理器。单文件运行，支持 10
 | macOS | ARM64 (Apple Silicon) | `VibeCoding_LED_manager_mac_arm64.dmg` |
 | Linux | x64 | `VibeCoding_LED_manager_linux_x64.AppImage` |
 
-> macOS 首次打开若提示"无法验证开发者"，系统设置 → 隐私与安全性 → 仍要打开。
+> macOS 首次打开若提示"无法验证开发者"或"已损坏，无法打开"：
+>   1. 系统设置 → 隐私与安全性 → 仍要打开
+>   2. 若仍有提示，终端执行：`sudo xattr -rd com.apple.quarantine /Applications/VibeCoding.app`
+>   3. Apple Silicon (M 芯片) 用户注意：未签名的 ARM64 应用会被 Gatekeeper 拦截，属正常现象
 > Linux AppImage 需先 `chmod +x`。
 
 ## 安装管理器UI预览

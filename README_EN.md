@@ -32,7 +32,10 @@ Get the latest from [Releases](https://github.com/VodooWaWa/VibeCoding_LED_manag
 | macOS | ARM64 (Apple Silicon) | `VibeCoding_LED_manager_mac_arm64.dmg` |
 | Linux | x64 | `VibeCoding_LED_manager_linux_x64.AppImage` |
 
-> macOS: System Settings → Privacy & Security → Open Anyway if blocked.
+> macOS: If "can't be opened" or "damaged" appears:
+>   1. System Settings → Privacy & Security → Open Anyway
+>   2. If still blocked: `sudo xattr -rd com.apple.quarantine /Applications/VibeCoding.app`
+>   3. Apple Silicon (M series) note: unsigned ARM64 builds are blocked by Gatekeeper — this is expected
 > Linux: `chmod +x` the AppImage first.
 
 ## Features
