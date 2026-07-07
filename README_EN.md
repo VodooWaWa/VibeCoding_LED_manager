@@ -10,7 +10,11 @@ One-click installer for AI status LED indicator. Single-file executable, support
 >
 > For questions, read the [User Manual](用户使用说明.pdf)
 >
-> ## Latest Firmware: v3.5 (check WebUI)
+> ## Latest Firmware: v3.5.1 (check WebUI)
+> **v3.5.1 Changelog:**
+> - Attempted fix for macOS BLE device discovery failure (unverified)
+> - BLE advertising packet restructured: device name now sent in advertising data, no longer relies on scan response
+>
 > **v3.5 Changelog:**
 > - LED direction flip toggle
 > - WiFi AP provisioning and fallback, fixed channel 6
