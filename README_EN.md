@@ -10,7 +10,7 @@ One-click installer for AI status LED indicator. Single-file executable, support
 >
 > For questions, read the [User Manual](用户使用说明.pdf)
 >
-> ## Latest Firmware: v3.5.2 (check WebUI)
+> ## Latest Firmware: v3.5.1 (check WebUI)
 >
 > **v3.5.1 Changelog:**
 > - Attempted fix for macOS BLE device discovery failure (unverified)
