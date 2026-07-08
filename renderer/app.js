@@ -60,7 +60,7 @@ const I18N = {
     install: '安装',
     checkingEnvStatus: '检测环境中...',
     envCheckFailed: '环境检测失败: ',
-    installDepsStatus: '安装依赖中... pip install bleak pyserial mcp',
+    installDepsStatus: '安装依赖中... pip install bleak mcp',
     depsInstalled: '依赖安装完成',
     depsInstallFailed: '依赖安装失败: ',
     loadingStatus: '加载平台状态...',
@@ -215,7 +215,6 @@ const dom = {
   // Env
   envPython: $('#env-python'),
   envBleak: $('#env-bleak'),
-  envPyserial: $('#env-pyserial'),
   envMcp: $('#env-mcp'),
   btnInstallDeps: $('#btn-install-deps'),
   // Device
@@ -299,7 +298,6 @@ function renderEnv() {
   setBadge(dom.envPython, env.python, env.pythonVer || 'OK', t('notInstalled'));
   setBadge(dom.envBleak, env.bleak, 'OK', t('needInstall'));
   setBadge(dom.envMcp, env.mcp, 'OK', t('needInstall'));
-  setBadge(dom.envPyserial, env.pyserial, 'OK', t('needInstall'));
   checkDepsButton();
 }
 

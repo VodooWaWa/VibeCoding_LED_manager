@@ -129,7 +129,7 @@ def scan_devices():
 
 def check_deps():
     try:
-        __import__("bleak"); __import__("serial"); __import__("mcp")
+        __import__("bleak"); __import__("mcp")
         return True
     except ImportError:
         return False
@@ -139,7 +139,7 @@ def env_report():
     print(f"  Python:  {sys.version}")
     print(f"  路径:    {sys.executable}")
     print(f"  版本:    {'OK' if check_python() else 'NEED >=3.9'}")
-    print(f"  依赖:    {'OK' if check_deps() else '需安装 bleak + pyserial + mcp'}")
+    print(f"  依赖:    {'OK' if check_deps() else '需安装 bleak + mcp'}")
     print("")
 
 # ── 文件比较工具 ─────────────────────────────────────────
