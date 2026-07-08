@@ -11,10 +11,6 @@ AI 编程状态指示灯 — 一键安装管理器。单文件运行，支持 10
 > 如果您有使用方面的任何疑问，请阅读[用户使用说明](用户使用说明.pdf)
 >
 ## 当前设备固件最新版本号：v3.5.2(可以访问设备WebUI查看)
-**v3.5.2更新日志：**
-- 新增 USB Serial 连接支持（USB > WiFi > BLE 优先级），USB 线直连即可控制
-- 需安装 pyserial：`pip install pyserial`
-- 注意：USB 通道与 ESP32 启动日志共享同一串口，固件使用 `[3DAI]` 前缀精准过滤
 
 **v3.5.1更新日志：**
 - 尝试修复苹果 macOS 系统蓝牙 BLE 发现失败的问题（已验证，没修好。。我TM放弃了！开发穷，没钱买苹果。。）
@@ -62,7 +58,7 @@ AI 编程状态指示灯 — 一键安装管理器。单文件运行，支持 10
 - **设备管理**：扫描局域网设备、WiFi/BLE 绑定解绑、清除蓝牙配对
 - **平台支持**：Claude Code / Codex CLI / OpenCode / MiMoCode / Cursor / Windsurf / Trae / TraeCN / OpenClaw / Reasonix
 - **全局 / 项目级**：全局所有项目通用，项目级跟着目录走
-- **环境检测**：自动检测 Python、bleak、pyserial、mcp 依赖
+- **环境检测**：自动检测 Python、bleak、mcp 依赖
 - **MCP+Skill 导出**：打包为完整配置文件包，用于列表外平台手动接入
 - **中英文切换**：界面支持中文/English
 
