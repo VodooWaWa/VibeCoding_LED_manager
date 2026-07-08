@@ -129,7 +129,7 @@ def scan_devices():
 
 def check_deps():
     try:
-        __import__("bleak"); __import__("mcp")
+        __import__("bleak"); __import__("serial"); __import__("mcp")
         return True
     except ImportError:
         return False
@@ -139,7 +139,7 @@ def env_report():
     print(f"  Python:  {sys.version}")
     print(f"  路径:    {sys.executable}")
     print(f"  版本:    {'OK' if check_python() else 'NEED >=3.9'}")
-    print(f"  依赖:    {'OK' if check_deps() else '需安装 bleak + mcp'}")
+    print(f"  依赖:    {'OK' if check_deps() else '需安装 bleak + pyserial + mcp'}")
     print("")
 
 # ── 文件比较工具 ─────────────────────────────────────────
@@ -545,33 +545,27 @@ def install_hooks(platform_key, scope="global"):
         existing["hooks"] = hooks
         save_json(cfg_path, existing)
     elif platform_key == "reasonix":
-        # Reasonix uses flat hooks format in .reasonix/settings.json
-        tmpl = PROJECT_DIR / ".reasonix" / "settings.json"
+        tmpl = PROJECT_DIR / "hooks" / "reasonix_hooks.json"
         if not tmpl.exists(): return
         template = json.loads(tmpl.read_text(encoding="utf-8"))
         if scope == "project":
             cfg_path = PROJECT_DIR / ".reasonix" / "settings.json"
-            # Already in place — verify and report
-            existing = load_json(cfg_path)
-            if existing.get("hooks") == template.get("hooks"):
-                print(f"  Hooks 已安装(无变化): {cfg_path}")
-                return
-            save_json(cfg_path, template)
+            send_py = str(PROJECT_DIR / "transport" / "send.py")
         else:
             cfg_path = Path.home() / ".reasonix" / "settings.json"
             send_py = str(GLOBAL_BIN / "transport" / "send.py")
-            import copy
-            hooks = copy.deepcopy(template)
-            for event, entries in hooks.get("hooks", {}).items():
-                for entry in entries:
-                    cmd = entry.get("command", "")
-                    # Replace relative path with absolute global path
-                    entry["command"] = cmd.replace(
-                        "python transport/send.py", f"python {send_py}"
-                    )
-            existing = load_json(cfg_path)
-            existing["hooks"] = hooks.get("hooks", {})
-            save_json(cfg_path, existing)
+        import copy
+        hooks = copy.deepcopy(template)
+        for event, entries in hooks.get("hooks", {}).items():
+            for entry in entries:
+                entry["command"] = entry["command"].replace(
+                    "\"<PROJECT_DIR>/transport/send.py\"",
+                    f'"{send_py}"'
+                )
+        existing = load_json(cfg_path)
+        existing["hooks"] = hooks.get("hooks", {})
+        save_json(cfg_path, existing)
+        print(f"  OK {cfg_path}")
 
 def install_skill(scope="global", project_dir=None, platform_key=None):
     """Install skill file — auto-trigger platforms get SKILL.md, MCP-only get SKILL-mcp.md."""

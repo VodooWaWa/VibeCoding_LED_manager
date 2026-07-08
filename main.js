@@ -69,7 +69,7 @@ function runPython(args, opts = {}) {
 // ── IPC Handlers ────────────────────────────────────────
 
 ipcMain.handle('check-env', async () => {
-  const result = { python: false, pythonVer: '', bleak: false, mcp: false };
+  const result = { python: false, pythonVer: '', bleak: false, pyserial: false, mcp: false };
   const py = await runPython(['--version']);
   if (py.code === 0) {
     result.python = true;
@@ -77,13 +77,15 @@ ipcMain.handle('check-env', async () => {
   }
   const bleak = await runPython(['-c', 'import bleak']);
   result.bleak = bleak.code === 0;
+  const pyserial = await runPython(['-c', 'import serial']);
+  result.pyserial = pyserial.code === 0;
   const mcp = await runPython(['-c', 'import mcp']);
   result.mcp = mcp.code === 0;
   return result;
 });
 
 ipcMain.handle('install-deps', async () => {
-  const r = await runPython(['-m', 'pip', 'install', 'bleak', 'mcp'], { timeout: 120000 });
+  const r = await runPython(['-m', 'pip', 'install', 'bleak', 'pyserial', 'mcp'], { timeout: 120000 });
   return { success: r.success, output: r.stdout };
 });
 

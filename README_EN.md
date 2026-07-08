@@ -10,7 +10,12 @@ One-click installer for AI status LED indicator. Single-file executable, support
 >
 > For questions, read the [User Manual](用户使用说明.pdf)
 >
-> ## Latest Firmware: v3.5.1 (check WebUI)
+> ## Latest Firmware: v3.5.2 (check WebUI)
+> **v3.5.2 Changelog:**
+> - New: USB Serial connection support (USB > WiFi > BLE priority)
+> - Requires pyserial: `pip install pyserial`
+> - Note: USB shares the same serial port as boot logs; firmware uses `[3DAI]` prefix for reliable filtering
+>
 > **v3.5.1 Changelog:**
 > - Attempted fix for macOS BLE device discovery failure (unverified)
 > - BLE advertising packet restructured: device name now sent in advertising data, no longer relies on scan response
@@ -44,12 +49,12 @@ Get the latest from [Releases](https://github.com/VodooWaWa/VibeCoding_LED_manag
 
 ## Features
 
-- **One-click install**: Pick platform → Install. Auto-detects Python/bleak/mcp.
+- **One-click install**: Pick platform → Install. Auto-detects Python/bleak/pyserial/mcp.
 - **One-click uninstall**: Clean removal, no leftovers.
 - **Device management**: LAN scan, WiFi/BLE bind/unbind, clear BLE bonds.
 - **10 platforms**: Claude Code / Codex CLI / OpenCode / MiMoCode / Cursor / Windsurf / Trae / TraeCN / OpenClaw / Reasonix
 - **Global / Project scope**: Global = all projects. Project = per-repo config.
-- **Environment check**: Python 3.12+, bleak, mcp auto-detection.
+- **Environment check**: Python 3.12+, bleak, pyserial, mcp auto-detection.
 - **MCP+Skill export**: Bundle config files for manual platform setup.
 - **Bilingual UI**: Chinese / English.
 
