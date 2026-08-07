@@ -6,3 +6,4 @@ __pycache__/
 .gstack/
 build.ps1
 build.sh
+.reasonix/
