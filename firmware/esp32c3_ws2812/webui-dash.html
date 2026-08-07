@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Project Dashboard</title>
+<style>
+:root { --bg:#121212; --surface:#1e1e1e; --text:#e0e0e0; --text-secondary:#a0a0a0; --accent:#bb86fc; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang SC','Microsoft YaHei',sans-serif; padding:16px; min-height:100vh; display:flex; justify-content:center; align-items:flex-start; }
+.card { background:var(--surface); border-radius:16px; padding:24px; max-width:480px; width:100%; box-shadow:0 4px 24px rgba(0,0,0,0.4); }
+.header { text-align:center; margin-bottom:24px; }
+.header h1 { font-size:1.3em; font-weight:600; }
+.header .device-id { color:var(--accent); font-size:0.875em; font-family:monospace; margin-top:2px; }
+.section { margin-bottom:20px; }
+.section-title { font-size:0.875em; color:var(--text-secondary); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px; }
+.btn { display:inline-block; padding:6px 14px; border:1px solid #444; border-radius:8px; background:transparent; color:var(--accent); font-size:0.875em; cursor:pointer; text-decoration:none; transition:all 0.2s; }
+.btn:hover { background:rgba(187,134,252,0.1); }
+.btn.back { display:block; text-align:center; margin-top:12px; }
+.led-table { width:100%; border-collapse:collapse; font-size:0.95em; }
+.led-table thead th { text-align:left; padding:8px 12px; color:var(--text-secondary); font-weight:500; font-size:0.9em; border-bottom:1px solid #333; }
+.led-table thead th:first-child { width:40px; text-align:center; }
+.led-table thead th:last-child { width:100px; }
+.led-table tbody td { padding:14px 12px; border-bottom:1px solid #2a2a2a; }
+.led-table tbody tr.active td { border-bottom-color:var(--accent); }
+.led-table .led-num { text-align:center; color:var(--text-secondary); font-size:0.95em; }
+.led-table .led-label { font-weight:500; font-size:0.95em; }
+.led-table .led-state-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+.led-table .led-state-text { vertical-align:middle; font-size:0.95em; }
+.dash-placeholder { text-align:center; padding:40px 20px; color:var(--text-secondary); border:1px dashed #444; border-radius:12px; }
+.dash-placeholder .icon { font-size:3em; margin-bottom:12px; }
+</style>
+</head>
+<body>
+<div class="card" id="dashActive">
+  <div class="header"><h1>Project Dashboard</h1><div class="device-id">esp32-led-7604F1A8</div></div>
+  <div class="section"><div class="section-title">Project Status</div>
+    <table class="led-table"><thead><tr><th>#</th><th>Project</th><th>Status</th></tr></thead><tbody id="ledBody"></tbody></table>
+  </div>
+  <a class="btn back" href="/">&larr; 返回</a>
+</div>
+<div class="card" id="dashDisabled" style="display:none">
+  <div class="header"><h1>Project Dashboard</h1></div>
+  <div class="dash-placeholder"><div class="icon">&#x1F4A1;</div><p>当前是单项目模式</p>
+    <p style="font-size:0.875em;margin-top:4px">在设置中开启多项目模式后可查看</p>
+    <a class="btn back" href="/">返回</a></div>
+</div>
+<script>
+var c={thinking:'#ff6b6b',coding:'#bb86fc',busy:'#ffaa00',waiting:'#e04040',success:'#4caf50',error:'#ff4444',alarm:'#ff0000',off:'#666'};
+function bld(){var t=document.getElementById('ledBody');if(!t)return;var h='';for(var i=0;i<8;i++)h+='<tr id=lr'+i+'><td class=led-num>'+(i+1)+'</td><td class=led-label id=ll'+i+'>'+(i+1)+'</td><td><span class=led-state-dot id=ld'+i+'></span><span class=led-state-text id=ls'+i+'>off</span></td></tr>';t.innerHTML=h;}
+function upd(d){var t=document.getElementById('ledBody');if(!t.querySelectorAll('tr').length)bld();for(var i=0;i<8;i++){var r=document.getElementById('lr'+i);if(!r)continue;var e=(d.l||[])[i]||{};var s=e.s||'off';var lb=e.lb||'';document.getElementById('ll'+i).textContent=lb||(i+1);document.getElementById('ls'+i).textContent=s;document.getElementById('ld'+i).style.backgroundColor=c[s]||'#666';r.className=s!=='off'?'active':'';}}
+async function pollDash(){
+  try{var r=await fetch('/status');var d=await r.json();
+    if(d.multi_project){document.getElementById('dashActive').style.display='';document.getElementById('dashDisabled').style.display='none';var r2=await fetch('/ledmap');upd(await r2.json());}
+    else{document.getElementById('dashActive').style.display='none';document.getElementById('dashDisabled').style.display='';}
+  }catch(e){}
+}
+bld();setInterval(pollDash,2000);pollDash();
+</script>
+</body>
+</html>

@@ -25,6 +25,19 @@ One-click installer for AI status LED indicator. Single-file executable, support
 >
 > Firmware cannot OTA upgrade. Contact support for remote assistance (Windows + asklink).
 
+## Firmware Source
+
+ESP32-C3 firmware source is now open — build & flash it yourself:
+
+- **Source**: [`firmware/esp32c3_ws2812/`](firmware/esp32c3_ws2812/)
+- **Latest**: v3.5.1
+- **Requires**: ESP-IDF v6.0.1
+- **Build & flash**: run `flash.cmd` inside `firmware/esp32c3_ws2812/` (Windows)
+
+Features: 8× WS2812 multi-state animations, WebUI config, TCP:8080 control, BLE GATT control, WiFi AP provisioning, per-project LED allocation.
+
+> Firmware source is for learning and self-flashing. Contact for commercial licensing.
+
 ## Download
 
 Get the latest from [Releases](https://github.com/VodooWaWa/VibeCoding_LED_manager/releases):

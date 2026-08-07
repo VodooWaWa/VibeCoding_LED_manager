@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vibe Coding AI 状态指示灯</title>
+<style>
+:root { --bg:#121212; --surface:#1e1e1e; --text:#e0e0e0; --text-secondary:#a0a0a0; --accent:#bb86fc; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:var(--bg); color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang SC','Microsoft YaHei',sans-serif;
+  padding:16px; min-height:100vh;
+  display:flex; justify-content:center; align-items:center;
+}
+/* === Single card (home) === */
+.card {
+  background:var(--surface); border-radius:16px; padding:24px;
+  max-width:420px; width:100%; box-shadow:0 4px 24px rgba(0,0,0,0.4);
+}
+/* === Dashboard layout === */
+.dash-container { display:flex; gap:16px; max-width:960px; margin:0 auto; align-items:flex-start; flex-wrap:wrap; }
+.dash-container .card { max-width:none; }
+
+.header { text-align:center; margin-bottom:24px; }
+.header h1 { font-size:1.3em; font-weight:600; }
+.header .device-id { color:var(--accent); font-size:0.78em; font-family:monospace; margin-top:2px; }
+
+.section { margin-bottom:20px; }
+.section-title { font-size:0.85em; color:var(--text-secondary); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px; }
+
+/* === Buttons === */
+.btn {
+  display:inline-block; padding:6px 14px; border:1px solid #444; border-radius:8px;
+  background:transparent; color:var(--accent); font-size:0.82em; cursor:pointer;
+  text-decoration:none; transition:all 0.2s; white-space:nowrap;
+}
+.btn:hover { background:rgba(187,134,252,0.1); }
+.btn.danger { border-color:#ff6b6b; color:#ff6b6b; }
+.btn.danger:hover { background:rgba(255,107,107,0.1); }
+.btn.counting { border-color:#ffaa00; color:#ffaa00; }
+.btn.success { border-color:#4caf50; color:#4caf50; }
+.btn.success:hover { background:rgba(76,175,80,0.1); }
+.btn.dash {
+  display:block; text-align:center; padding:12px; margin-top:8px;
+  border:1px dashed var(--accent); border-radius:10px; font-size:0.9em;
+}
+
+.wifi-row { display:flex; align-items:center; gap:10px; padding:12px; background:rgba(255,255,255,0.04); border-radius:10px; }
+.wifi-icon { font-size:1.2em; }
+.wifi-info { flex:1; min-width:0; }
+.wifi-ssid { font-weight:600; font-size:0.95em; }
+.wifi-ip { font-size:0.8em; color:var(--text-secondary); }
+
+.toggle-row { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; background:rgba(255,255,255,0.04); border-radius:10px; margin-bottom:8px; gap:8px; }
+.toggle-label { font-size:0.9em; font-weight:500; }
+.toggle-desc { font-size:0.75em; color:var(--text-secondary); margin-top:2px; }
+.toggle-switch { position:relative; display:inline-block; width:48px; height:26px; flex-shrink:0; }
+.toggle-switch input { opacity:0; width:0; height:0; }
+.toggle-slider { position:absolute; cursor:pointer; inset:0; background:#444; border-radius:26px; transition:0.3s; }
+.toggle-slider:before { content:''; position:absolute; height:20px; width:20px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:0.3s; }
+.toggle-switch input:checked+.toggle-slider { background:var(--accent); }
+.toggle-switch input:checked+.toggle-slider:before { transform:translateX(22px); }
+
+.slider-row { display:flex; align-items:center; gap:12px; }
+input[type=range] { flex:1; -webkit-appearance:none; height:6px; background:#333; border-radius:3px; outline:none; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:24px; height:24px; border-radius:50%; background:var(--accent); cursor:pointer; border:2px solid #1e1e1e; box-shadow:0 0 8px rgba(187,134,252,0.4); }
+.slider-val { font-size:1.2em; font-weight:700; min-width:40px; text-align:right; color:var(--accent); }
+.slider-labels { display:flex; justify-content:space-between; font-size:0.75em; color:var(--text-secondary); margin-top:4px; }
+
+.status-row { display:flex; align-items:center; gap:12px; padding:12px; background:rgba(255,255,255,0.04); border-radius:10px; }
+.status-dot { width:14px; height:14px; border-radius:50%; flex-shrink:0; box-shadow:0 0 10px currentColor; }
+.status-name { font-size:1.05em; font-weight:600; }
+.status-desc { font-size:0.78em; color:var(--text-secondary); margin-left:auto; }
+
+/* === Dashboard LED table === */
+.led-table { width:100%; border-collapse:collapse; font-size:0.85em; }
+.led-table th { text-align:left; padding:6px 8px; color:var(--text-secondary); font-weight:500; font-size:0.82em; border-bottom:1px solid #333; }
+.led-table td { padding:8px; border-bottom:1px solid #2a2a2a; transition:border-color 0.5s; }
+.led-table tr.active td { border-bottom-color:var(--accent); }
+.led-table .led-num { width:40px; color:var(--text-secondary); }
+.led-table .led-label { font-weight:500; }
+.led-table .led-state-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+.led-table .led-state-text { vertical-align:middle; }
+
+/* === Modal === */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:10; align-items:center; justify-content:center; }
+.modal-overlay.show { display:flex; }
+.modal { background:var(--surface); border-radius:16px; padding:24px; max-width:380px; width:90%; box-shadow:0 8px 32px rgba(0,0,0,0.6); }
+.modal h2 { font-size:1.2em; margin-bottom:16px; font-weight:600; }
+.modal .warn { font-size:0.78em; color:#ffaa00; margin-bottom:12px; }
+.modal label { display:block; font-size:0.85em; color:var(--text-secondary); margin-bottom:4px; margin-top:12px; }
+.modal input[type=text],.modal input[type=password] { width:100%; padding:10px 12px; background:#2a2a2a; border:1px solid #444; border-radius:8px; color:var(--text); font-size:0.95em; outline:none; }
+.modal input:focus { border-color:var(--accent); }
+#scanResults { max-height:150px; overflow-y:auto; margin:6px 0; font-size:0.8em; border:1px solid #2a2a2a; border-radius:6px; padding:4px 0; }
+.scan-item { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:2px 8px; cursor:pointer; }
+.scan-item:hover { background:rgba(187,134,252,0.1); }
+.modal .btn-row { display:flex; gap:10px; margin-top:20px; justify-content:flex-end; }
+
+.help-link { display:block; text-align:center; padding:10px; color:var(--accent); text-decoration:none; font-size:0.85em; border:1px solid #333; border-radius:10px; margin-top:12px; transition:background 0.2s; }
+.help-link:hover { background:rgba(187,134,252,0.1); }
+.lang-switch { display:flex; justify-content:center; gap:8px; margin-top:12px; }
+.lang-switch a { color:var(--text-secondary); text-decoration:none; font-size:0.82em; padding:4px 10px; border-radius:6px; transition:all 0.2s; }
+.lang-switch a.active { color:var(--accent); background:rgba(187,134,252,0.15); }
+.lang-switch a:hover { color:var(--text); }
+.param-row { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; background:rgba(255,255,255,0.04); border-radius:10px; margin-bottom:8px; }
+.param-label { font-size:0.9em; font-weight:500; }
+.param-desc { font-size:0.75em; color:var(--text-secondary); margin-top:2px; }
+.param-input { width:80px; padding:6px 10px; background:#2a2a2a; border:1px solid #444; border-radius:8px; color:var(--text); font-size:0.9em; text-align:center; outline:none; }
+.param-input:focus { border-color:var(--accent); }
+.param-unit { font-size:0.82em; color:var(--text-secondary); margin-left:6px; }
+.toast { position:fixed; bottom:30px; left:50%; transform:translateX(-50%); background:var(--surface); border:1px solid #444; border-radius:10px; padding:10px 20px; font-size:0.88em; color:var(--text); z-index:20; opacity:0; transition:opacity 0.3s; pointer-events:none; }
+.toast.show { opacity:1; }
+
+/* === Placeholder for disabled dashboard === */
+.dash-placeholder {
+  text-align:center; padding:40px 20px; color:var(--text-secondary);
+  border:1px dashed #444; border-radius:12px;
+}
+.dash-placeholder .icon { font-size:3em; margin-bottom:12px; }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     HOME PAGE  (/)
+     Single card, centered. Multi-LED toggle is here in Settings.
+     When multi-LED ON, a "Open Dashboard" button appears.
+     ============================================================ -->
+<div class="card" id="homePage">
+  <div class="header">
+    <h1>Vibe Coding AI <small style="color:var(--text-secondary);font-size:0.55em;font-weight:400">v1.2</small></h1>
+    <div class="device-id" id="deviceId">esp32-led-XXXXXXXX</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title" data-en="Network" data-zh="网络连接">网络连接</div>
+    <div class="wifi-row">
+      <span class="wifi-icon">&#x1F4F6;</span>
+      <div class="wifi-info">
+        <div class="wifi-ssid" id="ssid">--</div>
+        <div class="wifi-ip" id="ipAddr">--</div>
+      </div>
+      <a class="btn" href="javascript:void(0)" onclick="toggleWifiModal()" data-en="Change" data-zh="修改">修改</a>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title" data-en="Brightness" data-zh="亮度调节">亮度调节</div>
+    <div class="slider-row">
+      <input type="range" id="bri" min="1" max="255" value="128">
+      <span class="slider-val" id="briVal">50%</span>
+    </div>
+    <div class="slider-labels">
+      <span data-en="Dim" data-zh="暗">暗</span>
+      <span data-en="Bright" data-zh="亮">亮</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title" data-en="Bluetooth" data-zh="蓝牙设置">蓝牙设置</div>
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label" data-en="BLE Server" data-zh="蓝牙服务">蓝牙服务</div>
+        <div class="toggle-desc" data-en="Enable BLE GATT" data-zh="启用 BLE GATT 通信">启用 BLE GATT 通信</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="bleToggle" onchange="toggleBLE()"><span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="toggle-row" id="blediscRow" style="opacity:0.5">
+      <div>
+        <div class="toggle-label" data-en="Discoverable" data-zh="蓝牙发现">蓝牙发现</div>
+        <div class="toggle-desc" id="blediscDesc" data-en="Visible to BLE scanners (120s auto-off)" data-zh="允许 BLE 扫描发现（120秒自动关闭）">允许 BLE 扫描发现（120秒自动关闭）</div>
+      </div>
+      <a class="btn" id="blediscBtn" href="javascript:void(0)" onclick="startBLEDiscover()" data-en="Enable" data-zh="开启发现">开启发现</a>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title" data-en="Auto Standby" data-zh="自动待机">自动待机</div>
+    <div class="param-row">
+      <div>
+        <div class="param-label" data-en="Idle Timeout" data-zh="闲置超时">闲置超时</div>
+        <div class="param-desc" data-en="0 = always on" data-zh="0 = 常亮">0 = 常亮</div>
+      </div>
+      <input class="param-input" id="idleTimeout" value="120" type="number" min="0" max="3600">
+      <span class="param-unit">s</span>
+      <a class="btn success" href="javascript:void(0)" onclick="saveIdleTimeout()" data-en="Save" data-zh="保存">保存</a>
+    </div>
+  </div>
+
+  <!-- Multi-LED toggle (in settings) -->
+  <div class="section">
+    <div class="section-title" data-en="Multi-LED" data-zh="多灯模式">多灯模式</div>
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label" data-en="Multi-LED Mode" data-zh="多灯模式">多灯模式</div>
+        <div class="toggle-desc" data-en="Independent LED per project" data-zh="每颗 LED 独立反映一个项目">每颗 LED 独立反映一个项目</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="multiToggle" onchange="toggleMultiMode()"><span class="toggle-slider"></span>
+      </label>
+    </div>
+    <a class="btn dash" id="dashBtn" href="/dash" style="display:none" data-en="Open LED Dashboard" data-zh="打开 LED 看板">打开 LED 看板</a>
+  </div>
+
+  <div class="section">
+    <div class="section-title" data-en="Current Status" data-zh="当前状态">当前状态</div>
+    <div class="status-row">
+      <div class="status-dot" id="dot"></div>
+      <span class="status-name" id="stateName">off</span>
+      <span class="status-desc" id="stateDesc"></span>
+    </div>
+  </div>
+
+  <a class="help-link" href="/help" data-en="Status Guide" data-zh="状态说明">状态说明</a>
+  <div class="lang-switch">
+    <a href="/lang?l=zh" id="langZh">中文</a>
+    <a href="/lang?l=en" id="langEn">English</a>
+  </div>
+</div>
+
+<!-- ============================================================
+     DASHBOARD PAGE  (/dash)
+     Shown when multi-LED mode is ON.
+     If OFF, shows a placeholder message.
+     ============================================================ -->
+<div class="dash-container" id="dashPage" style="display:none">
+  <div class="card" style="flex:1;min-width:350px">
+    <div class="header">
+      <h1>LED Dashboard</h1>
+      <div class="device-id" id="dashDeviceId">esp32-led-XXXXXXXX</div>
+    </div>
+    <div class="section">
+      <div class="section-title">LED Status</div>
+      <table class="led-table">
+        <thead><tr><th>#</th><th>Project</th><th>Status</th></tr></thead>
+        <tbody id="ledBody"></tbody>
+      </table>
+    </div>
+    <a class="btn" href="/" style="display:block;text-align:center;margin-top:12px">Back to Settings</a>
+  </div>
+</div>
+
+<!-- Dashboard disabled placeholder -->
+<div class="card" id="dashDisabled" style="display:none">
+  <div class="header"><h1>LED Dashboard</h1></div>
+  <div class="dash-placeholder">
+    <div class="icon">&#x1F4A1;</div>
+    <p data-en="Multi-LED mode is currently off." data-zh="当前是单灯模式">当前是单灯模式</p>
+    <p style="font-size:0.8em;margin-top:4px" data-en="Enable it in Settings to see the dashboard." data-zh="在设置中开启多灯模式后可查看看板">在设置中开启多灯模式后可查看看板</p>
+    <a class="btn" href="/" style="margin-top:16px">Back to Settings</a>
+  </div>
+</div>
+
+<!-- ========== WiFi Modal ========== -->
+<div class="modal-overlay" id="wifiModal">
+  <div class="modal">
+    <h2 data-en="WiFi Settings" data-zh="WiFi 设置">WiFi 设置</h2>
+    <div class="warn" data-en="After saving, the device will restart WiFi." data-zh="保存后将重启 WiFi。">保存后将重启 WiFi。</div>
+    <label data-en="SSID" data-zh="WiFi 名称">WiFi 名称</label>
+    <input type="text" id="wifiSSID" placeholder="WiFi SSID">
+    <label data-en="Password" data-zh="WiFi 密码">WiFi 密码</label>
+    <input type="password" id="wifiPass" placeholder="WiFi Password">
+    <div class="btn-row">
+      <a class="btn" href="javascript:void(0)" onclick="scanWiFi()" data-en="Scan" data-zh="扫描">扫描</a>
+      <a class="btn success" href="javascript:void(0)" onclick="saveWiFi()" data-en="Save" data-zh="保存">保存</a>
+      <a class="btn" href="javascript:void(0)" onclick="toggleWifiModal()" data-en="Cancel" data-zh="取消">取消</a>
+    </div>
+    <div id="scanResults"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ==================== i18n ====================
+var pageLang = 'zh';
+var stateNamesEN = ['thinking','coding','busy','waiting','success','error','alarm','off'];
+var stateNamesZH = ['思考中','编码中','执行中','等待输入','完成','出错','警告','待机'];
+var stateDescsEN = ['Rainbow spin','Liquid breath','Yellow scan','Red breath','Green breath','Triple flash','Red-blue flip','Standby'];
+var stateDescsZH = ['高速彩虹旋转','青紫液态呼吸','黄色双向扫描','红色呼吸灯','绿色呼吸灯','红橙三连快闪','红蓝全灯带翻转','全灭待机'];
+var colors = { thinking:'#ff6b6b', coding:'#bb86fc', busy:'#ffaa00', waiting:'#e04040', success:'#4caf50', error:'#ff4444', alarm:'#ff0000', off:'#666' };
+
+document.querySelectorAll('[data-en]').forEach(function(el){
+  var v = el.getAttribute(pageLang==='en'?'data-en':'data-zh');
+  if (v) el.textContent = v;
+});
+
+function tval(en, zh) { return pageLang === 'en' ? en : zh; }
+function showToast(msg) {
+  var tt = document.getElementById('toast');
+  tt.textContent = msg; tt.classList.add('show');
+  setTimeout(function(){ tt.classList.remove('show'); }, 2500);
+}
+
+// Detect which page we're on
+var isDashPage = window.location.pathname === '/dash';
+if (isDashPage) {
+  document.body.style.display = 'block';
+  document.body.style.alignItems = 'flex-start';
+  document.getElementById('homePage').style.display = 'none';
+}
+
+// ==================== Polling ====================
+var lastState = '';
+async function pollStatus() {
+  try {
+    var r = await fetch('/status'); var d = await r.json();
+
+    // Multi-LED toggle + dash button
+    var mt = document.getElementById('multiToggle');
+    if (mt) mt.checked = d.multi_led;
+    var dashBtn = document.getElementById('dashBtn');
+    if (dashBtn) dashBtn.style.display = d.multi_led ? '' : 'none';
+
+    // Dashboard page logic
+    if (isDashPage) {
+      if (d.multi_led) {
+        document.getElementById('dashPage').style.display = 'flex';
+        document.getElementById('dashDisabled').style.display = 'none';
+        try {
+          var r2 = await fetch('/ledmap'); var d2 = await r2.json();
+          updateLedList(d2);
+        } catch(e2) {}
+      } else {
+        document.getElementById('dashPage').style.display = 'none';
+        document.getElementById('dashDisabled').style.display = 'block';
+      }
+      return; // dash page: skip home-only updates
+    }
+
+    // Home page updates
+    if (d.state !== lastState) {
+      lastState = d.state;
+      var dot = document.getElementById('dot');
+      dot.style.backgroundColor = colors[d.state] || '#666';
+      var names = pageLang === 'en' ? stateNamesEN : stateNamesZH;
+      var descs = pageLang === 'en' ? stateDescsEN : stateDescsZH;
+      var idx = stateNamesEN.indexOf(d.state);
+      document.getElementById('stateName').textContent = idx>=0 ? names[idx] : d.state;
+      document.getElementById('stateDesc').textContent = idx>=0 ? descs[idx] : '';
+    }
+    document.getElementById('bri').value = d.brightness;
+    document.getElementById('briVal').textContent = Math.round(d.brightness/2.55) + '%';
+    var bleEl = document.getElementById('bleToggle');
+    if (bleEl) bleEl.checked = d.ble_enabled;
+    var discRow = document.getElementById('blediscRow');
+    if (discRow) discRow.style.opacity = d.ble_enabled ? '1' : '0.5';
+    if (d.idle_timeout) {
+      var el = document.getElementById('idleTimeout');
+      if (document.activeElement !== el) el.value = d.idle_timeout;
+    }
+    document.getElementById('ssid').textContent = d.ssid || '(AP Mode)';
+    document.getElementById('ipAddr').textContent = d.ip || '--';
+  } catch(e) {}
+}
+
+// ==================== LED List (dashboard) ====================
+function updateLedList(data) {
+  var tbody = document.getElementById('ledBody');
+  if (!tbody) return;
+  var rows = tbody.querySelectorAll('tr');
+  if (rows.length === 0) buildLedList();
+  for (var i = 0; i < 8; i++) {
+    var row = document.getElementById('ledRow'+i);
+    if (!row) continue;
+    var entry = (data.l || [])[i] || {};
+    var st = entry.s || 'off';
+    var lb = entry.lb || '';
+    var labelEl = document.getElementById('ledLabel'+i);
+    var stateEl = document.getElementById('ledState'+i);
+    var dotEl = document.getElementById('ledDot'+i);
+    if (labelEl) labelEl.textContent = lb || '--';
+    if (stateEl) stateEl.textContent = st;
+    if (dotEl) dotEl.style.backgroundColor = colors[st] || '#666';
+    row.className = (st !== 'off') ? 'active' : '';
+  }
+}
+
+function buildLedList() {
+  var tbody = document.getElementById('ledBody');
+  if (!tbody) return;
+  var html = '';
+  for (var i = 0; i < 8; i++) {
+    html += '<tr id="ledRow'+i+'">'+
+      '<td class="led-num">'+(i+1)+'</td>'+
+      '<td class="led-label" id="ledLabel'+i+'">--</td>'+
+      '<td><span class="led-state-dot" id="ledDot'+i+'"></span>'+
+      '<span class="led-state-text" id="ledState'+i+'">off</span></td></tr>';
+  }
+  tbody.innerHTML = html;
+}
+
+async function toggleMultiMode() {
+  var m = document.getElementById('multiToggle');
+  try { await fetch('/mode?m=' + (m.checked ? '1' : '0')); } catch(e) {}
+  // Show/hide dash button
+  var btn = document.getElementById('dashBtn');
+  if (btn) btn.style.display = m.checked ? '' : 'none';
+}
+
+// ==================== BLE ====================
+var bleDiscoverTimer = null, bleDiscoverSeconds = 0;
+function startBLEDiscover() {
+  var btn = document.getElementById('blediscBtn');
+  var desc = document.getElementById('blediscDesc');
+  if (bleDiscoverTimer) {
+    clearInterval(bleDiscoverTimer); bleDiscoverTimer = null; bleDiscoverSeconds = 0;
+    btn.textContent = tval('Enable','开启发现'); btn.className = 'btn';
+    desc.textContent = tval('Visible to BLE scanners (120s auto-off)','允许 BLE 扫描发现（120秒自动关闭）');
+    fetch('/bledisc?en=0'); return;
+  }
+  bleDiscoverSeconds = 120; btn.className = 'btn counting';
+  fetch('/bledisc?en=1');
+  bleDiscoverTimer = setInterval(function() {
+    bleDiscoverSeconds--;
+    btn.textContent = bleDiscoverSeconds + 's';
+    if (bleDiscoverSeconds <= 0) {
+      clearInterval(bleDiscoverTimer); bleDiscoverTimer = null;
+      btn.textContent = tval('Enable','开启发现'); btn.className = 'btn';
+      desc.textContent = tval('Visible to BLE scanners (120s auto-off)','允许 BLE 扫描发现（120秒自动关闭）');
+    }
+  }, 1000);
+}
+
+async function toggleBLE() {
+  var v = document.getElementById('bleToggle').checked ? '1' : '0';
+  try { await fetch('/ble?en='+v); } catch(e) {}
+}
+
+// ==================== WiFi Modal ====================
+function toggleWifiModal() {
+  document.getElementById('wifiModal').classList.toggle('show');
+}
+async function saveWiFi() {
+  var ssid = document.getElementById('wifiSSID').value;
+  var pass = document.getElementById('wifiPass').value;
+  if (!ssid) { showToast(tval('Enter SSID','请输入 WiFi 名称')); return; }
+  try {
+    var r = await fetch('/wifi?ssid='+encodeURIComponent(ssid)+'&pwd='+encodeURIComponent(pass));
+    var d = await r.json();
+    showToast(d.ok ? tval('Saved','已保存') : tval('Failed','失败'));
+    toggleWifiModal();
+  } catch(e) { showToast('Error: '+e); }
+}
+async function scanWiFi() {
+  var el = document.getElementById('scanResults');
+  el.innerHTML = tval('Scanning...','扫描中...');
+  try {
+    var r = await fetch('/scan'); var d = await r.json();
+    if (d.aps) {
+      el.innerHTML = d.aps.map(function(a){return '<div class="scan-item" onclick="pickSSID(\''+a.ssid+'\')">'+a.ssid+' ('+a.rssi+'dBm)</div>';}).join('');
+    }
+  } catch(e) { el.innerHTML = tval('Scan failed','扫描失败'); }
+}
+function pickSSID(ssid) { document.getElementById('wifiSSID').value = ssid; }
+
+async function saveIdleTimeout() {
+  var val = parseInt(document.getElementById('idleTimeout').value);
+  if (isNaN(val) || val < 0) { showToast(tval('Min 0 seconds','最小 0 秒')); return; }
+  try {
+    var r = await fetch('/idle_timeout?t='+val); var d = await r.json();
+    if (d.ok) showToast(tval('Saved','已保存'));
+  } catch(e) { showToast('Error: '+e); }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('bri').addEventListener('input', function() {
+    var v = this.value;
+    document.getElementById('briVal').textContent = Math.round(v/2.55) + '%';
+    fetch('/brightness?b=' + v);
+  });
+});
+
+buildLedList();
+setInterval(pollStatus, 2000);
+pollStatus();
+</script>
+</body>
+</html>

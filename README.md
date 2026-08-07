@@ -25,6 +25,19 @@ AI 编程状态指示灯 — 一键安装管理器。单文件运行，支持 10
 
 因为设备无法直接进行OTA，如果需要升级最新版固件，可以联系客服远程协助进行操作。（Windows环境+连连控远程控制软件）
 
+## 固件源码
+
+ESP32-C3 固件源码已开源，支持自行编译烧录：
+
+- **源码位置**：[`firmware/esp32c3_ws2812/`](firmware/esp32c3_ws2812/)
+- **最新版本**：v3.5.1
+- **环境要求**：ESP-IDF v6.0.1
+- **编译烧录**：进入 `firmware/esp32c3_ws2812/` 运行 `flash.cmd`（Windows）
+
+固件功能：8 颗 WS2812 多状态动画、WebUI 配置、TCP:8080 控制、BLE GATT 控制、WiFi AP 配网、多项目平台 LED 隔离。
+
+> 固件源码仅供学习参考与自行烧录，商业使用请联系授权。
+
 ## 下载
 
 从 [Releases](https://github.com/VodooWaWa/VibeCoding_LED_manager/releases) 下载对应系统版本：

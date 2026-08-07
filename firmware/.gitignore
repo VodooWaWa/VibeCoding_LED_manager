@@ -1,0 +1,9 @@
+# Build artifacts
+build/
+sdkconfig
+sdkconfig.old
+managed_components/
+*.bak
+monitor_err.txt
+monitor_out.txt
+__pycache__/

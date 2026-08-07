@@ -383,6 +383,7 @@ def _send_state(state: str, transport: str = "auto", host: str = None,
             cmd = f"{cmd} platform:{platform}"
     elif platform:
         cmd = f"{state} platform:{platform}"
+
     if transport in ("wifi", "auto"):
         h = host or discover_host()
         if h:

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vibe Coding LED 状态说明</title>
+<style>
+:root { --bg:#121212; --surface:#1e1e1e; --text:#e0e0e0; --text-secondary:#a0a0a0; --accent:#bb86fc; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:var(--bg); color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang SC','Microsoft YaHei',sans-serif;
+  padding:16px; min-height:100vh;
+  display:flex; justify-content:center; align-items:flex-start;
+}
+.card {
+  background:var(--surface); border-radius:16px; padding:24px;
+  max-width:560px; width:100%; box-shadow:0 4px 24px rgba(0,0,0,0.4);
+}
+.header { text-align:center; margin-bottom:20px; }
+.header h1 { font-size:1.3em; font-weight:600; }
+
+.section { margin-bottom:20px; }
+.section-title { font-size:0.875em; color:var(--text-secondary); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px; }
+
+.toggle-row { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; background:rgba(255,255,255,0.04); border-radius:10px; margin-bottom:8px; gap:8px; }
+.toggle-label { font-size:0.9em; font-weight:500; }
+.toggle-desc { font-size:0.875em; color:var(--text-secondary); margin-top:2px; }
+.toggle-switch { position:relative; display:inline-block; width:48px; height:26px; flex-shrink:0; }
+.toggle-switch input { opacity:0; width:0; height:0; }
+.toggle-slider { position:absolute; cursor:pointer; inset:0; background:#444; border-radius:26px; transition:0.3s; }
+.toggle-slider:before { content:''; position:absolute; height:20px; width:20px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:0.3s; }
+.toggle-switch input:checked+.toggle-slider { background:var(--accent); }
+.toggle-switch input:checked+.toggle-slider:before { transform:translateX(22px); }
+
+/* === LED selector === */
+.led-selector { display:flex; gap:8px; justify-content:center; margin:10px 0; display:none; }
+.led-selector.show { display:flex; }
+.led-dot-btn {
+  width:32px; height:32px; border-radius:50%; border:2px solid #444;
+  background:transparent; cursor:pointer; font-size:0.875em; color:var(--text-secondary);
+  display:flex; align-items:center; justify-content:center; transition:all 0.2s;
+}
+.led-dot-btn:hover { border-color:var(--accent); color:var(--text); }
+.led-dot-btn.selected { border-color:var(--accent); background:rgba(187,134,252,0.2); color:var(--accent); }
+
+/* === Statue table === */
+.guide-table { width:100%; border-collapse:collapse; font-size:0.95em; }
+.guide-table thead th {
+  text-align:left; padding:6px 8px; color:var(--text-secondary);
+  font-weight:500; font-size:0.9em; border-bottom:1px solid #333;
+}
+.guide-table thead th:last-child { text-align:center; width:52px; }
+.guide-table tbody td {
+  padding:8px 6px; border-bottom:1px solid #2a2a2a; vertical-align:middle;
+}
+.guide-table .col-state { font-weight:600; }
+.guide-table .col-effect { font-size:0.95em; color:var(--text-secondary); }
+.guide-table .col-desc { font-size:0.95em; color:var(--text-secondary); }
+.guide-table .col-btn { text-align:center; }
+.guide-dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+
+/* === Preview button === */
+.preview-btn {
+  padding:4px 12px; border:1px solid #444; border-radius:6px;
+  background:transparent; color:var(--accent); font-size:0.875em;
+  cursor:pointer; transition:all 0.2s; white-space:nowrap;
+}
+.preview-btn:hover { background:rgba(187,134,252,0.1); border-color:var(--accent); }
+
+.btn {
+  display:inline-block; padding:6px 14px; border:1px solid #444; border-radius:8px;
+  background:transparent; color:var(--accent); font-size:0.875em; cursor:pointer;
+  text-decoration:none; transition:all 0.2s; white-space:nowrap;
+}
+.btn:hover { background:rgba(187,134,252,0.1); }
+.btn.back { display:block; text-align:center; margin-top:16px; }
+
+.toast { position:fixed; bottom:30px; left:50%; transform:translateX(-50%); background:var(--surface); border:1px solid #444; border-radius:10px; padding:10px 20px; font-size:0.88em; color:var(--text); z-index:20; opacity:0; transition:opacity 0.3s; pointer-events:none; }
+.toast.show { opacity:1; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="header"><h1>LED 状态说明</h1></div>
+
+  <div class="section">
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">单灯测试模式</div>
+        <div class="toggle-desc">选择 LED + 点击预览，控制单颗灯珠</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="singleToggle" onchange="toggleSingleMode()"><span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="led-selector" id="ledSelector">
+      <button class="led-dot-btn selected" onclick="selectLed(0)">1</button>
+      <button class="led-dot-btn" onclick="selectLed(1)">2</button>
+      <button class="led-dot-btn" onclick="selectLed(2)">3</button>
+      <button class="led-dot-btn" onclick="selectLed(3)">4</button>
+      <button class="led-dot-btn" onclick="selectLed(4)">5</button>
+      <button class="led-dot-btn" onclick="selectLed(5)">6</button>
+      <button class="led-dot-btn" onclick="selectLed(6)">7</button>
+      <button class="led-dot-btn" onclick="selectLed(7)">8</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">状态一览</div>
+    <table class="guide-table">
+      <thead>
+        <tr><th>状态</th><th>灯光效果</th><th>说明</th><th>预览</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="col-state"><span class="guide-dot" style="background:#ff6b6b"></span>thinking</td>
+          <td class="col-effect">高速彩虹旋转</td>
+          <td class="col-desc">收到消息、AI 思考中</td>
+          <td class="col-btn"><button class="preview-btn" onclick="preview('thinking')">测试</button></td>
+        </tr>
+        <tr>
+          <td class="col-state"><span class="guide-dot" style="background:#bb86fc"></span>coding</td>
+          <td class="col-effect">青紫液态呼吸</td>
+          <td class="col-desc">编辑或写入文件</td>
+          <td class="col-btn"><button class="preview-btn" onclick="preview('coding')">测试</button></td>
+        </tr>
+        <tr>
+          <td class="col-state"><span class="guide-dot" style="background:#ffaa00"></span>busy</td>
+          <td class="col-effect">黄色间隔闪烁</td>
+          <td class="col-desc">执行终端命令</td>
+          <td class="col-btn"><button class="preview-btn" onclick="preview('busy')">测试</button></td>
+        </tr>
+        <tr>
+          <td class="col-state"><span class="guide-dot" style="background:#e04040"></span>waiting</td>
+          <td class="col-effect">红色呼吸</td>
+          <td class="col-desc">等待用户确认</td>
+          <td class="col-btn"><button class="preview-btn" onclick="preview('waiting')">测试</button></td>
+        </tr>
+        <tr>
+          <td class="col-state"><span class="guide-dot" style="background:#4caf50"></span>success</td>
+          <td class="col-effect">绿色呼吸</td>
+          <td class="col-desc">任务完成</td>
+          <td class="col-btn"><button class="preview-btn" onclick="preview('success')">测试</button></td>
+        </tr>
+        <tr>
+          <td class="col-state"><span class="guide-dot" style="background:#ff4444"></span>error</td>
+          <td class="col-effect">红橙三连快闪</td>
+          <td class="col-desc">命令执行失败</td>
+          <td class="col-btn"><button class="preview-btn" onclick="preview('error')">测试</button></td>
+        </tr>
+        <tr>
+          <td class="col-state"><span class="guide-dot" style="background:#ff0000"></span>alarm</td>
+          <td class="col-effect">红蓝翻转</td>
+          <td class="col-desc">API 错误、异常告警</td>
+          <td class="col-btn"><button class="preview-btn" onclick="preview('alarm')">测试</button></td>
+        </tr>
+        <tr>
+          <td class="col-state"><span class="guide-dot" style="background:#666"></span>off</td>
+          <td class="col-effect">全灭</td>
+          <td class="col-desc">会话结束、空闲待机</td>
+          <td class="col-btn"><button class="preview-btn" onclick="preview('off')">测试</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <a class="btn back" href="/">&larr; 返回</a>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var selectedLed=0;
+var singleMode=false;
+var previewTimer=null;
+var savedStates=null;
+
+// Save all LED states before entering test mode
+async function saveAllStates(){
+  try{var r=await fetch('/ledmap');var d=await r.json();savedStates=d.l.map(function(e){return e.s;});}catch(e){savedStates=null;}
+}
+// Restore all saved LED states
+function restoreAllStates(){
+  if(!savedStates) return;
+  for(var i=0;i<8;i++){
+    var s=savedStates[i]||'off';
+    fetch('/set?led='+i+'&s='+s+'&test=1');
+  }
+}
+
+function toggleSingleMode(){
+  singleMode=document.getElementById('singleToggle').checked;
+  var sel=document.getElementById('ledSelector');
+  sel.className=singleMode?'led-selector show':'led-selector';
+  if(singleMode){
+    // Save current states, then turn off all LEDs
+    saveAllStates();
+    fetch('/set?s=off&test=1');
+  }else{
+    // Turn off test mode: restore saved states
+    if(previewTimer){clearTimeout(previewTimer);previewTimer=null;}
+    restoreAllStates();
+    savedStates=null;
+  }
+}
+
+function selectLed(n){
+  selectedLed=n;
+  document.querySelectorAll('.led-dot-btn').forEach(function(b,i){
+    b.className=i===n?'led-dot-btn selected':'led-dot-btn';
+  });
+}
+
+function preview(state){
+  if(previewTimer){clearTimeout(previewTimer);previewTimer=null;}
+  var url=singleMode?'/set?led='+selectedLed+'&s='+state+'&test=1':'/set?s='+state+'&test=1';
+  fetch(url);
+  showToast((singleMode?'LED '+(selectedLed+1)+': ':'')+state+' (5s)');
+  previewTimer=setTimeout(function(){
+    var restoreUrl=singleMode?'/set?led='+selectedLed+'&s=off&test=1':'/set?s=off&test=1';
+    fetch(restoreUrl);
+    previewTimer=null;
+  },5000);
+}
+
+function showToast(m){
+  var t=document.getElementById('toast');
+  t.textContent=m;t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show')},2000);
+}
+</script>
+</body>
+</html>
